@@ -48,14 +48,8 @@ class App {
     if (authGuard.isAuthenticated()) {
       const user = authGuard.getCurrentUser();
       authNav.innerHTML = `
-        <li>
-          <span style="color: var(--text-secondary); font-size: var(--text-sm);">
-            Hi, ${user?.name || "User"}
-          </span>
-        </li>
-        <li>
-          <a href="#" id="logout-link">Logout</a>
-        </li>
+        <span>${user?.name || "User"}</span>
+        <a href="#" id="logout-link">Logout</a>
       `;
 
       const logoutLink = document.getElementById("logout-link");
@@ -69,8 +63,8 @@ class App {
       }
     } else {
       authNav.innerHTML = `
-        <li><a href="#/login">Login</a></li>
-        <li><a href="#/register">Register</a></li>
+        <a href="#/login">Login</a>
+        <a href="#/register">Register</a>
       `;
     }
   }

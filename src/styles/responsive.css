@@ -76,7 +76,8 @@
 
     .nav-list {
         flex-direction: row;
-        gap: var(--spacing-md);
+        gap: var(--spacing-sm);
+        align-items: center;
     }
 
     .nav-list li a {
@@ -91,6 +92,12 @@
     /* Header */
     .main-header {
         gap: var(--spacing-2xl);
+    }
+
+    .nav-container {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-lg);
     }
 
     /* Home Hero */

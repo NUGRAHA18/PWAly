@@ -19,48 +19,57 @@
     <title>StoryShare - Berbagi Cerita Dicoding</title>
   </head>
   <body>
+    <!-- Skip to Content -->
     <a href="#main-content" class="skip-link">Skip to content</a>
 
+    <!-- Header -->
     <header role="banner">
-      <div class="main-header container">
+      <div class="container main-header">
+        <!-- Brand Logo -->
         <a class="brand-name" href="#/">StoryShare</a>
 
-        <button
-          id="theme-toggle"
-          class="theme-toggle"
-          aria-label="Toggle dark/light theme"
-          title="Toggle Theme"
-        >
-          🌙
-        </button>
-
+        <!-- Main Navigation -->
         <nav
           id="navigation-drawer"
           class="navigation-drawer"
           role="navigation"
           aria-label="Main navigation"
         >
-          <ul id="nav-list" class="nav-list">
+          <ul class="nav-list">
             <li><a href="#/">Home</a></li>
             <li><a href="#/add-story">Tambah Cerita</a></li>
             <li id="auth-nav"></li>
           </ul>
         </nav>
 
-        <button
-          id="drawer-button"
-          class="drawer-button"
-          aria-label="Toggle navigation menu"
-          aria-expanded="false"
-          aria-controls="navigation-drawer"
-        >
-          ☰
-        </button>
+        <!-- Header Actions -->
+        <div class="header-actions">
+          <button
+            id="theme-toggle"
+            class="theme-toggle"
+            aria-label="Toggle theme"
+            title="Toggle Theme"
+          >
+            🌙
+          </button>
+
+          <button
+            id="drawer-button"
+            class="drawer-button"
+            aria-label="Toggle menu"
+            aria-expanded="false"
+            aria-controls="navigation-drawer"
+          >
+            ☰
+          </button>
+        </div>
       </div>
     </header>
 
+    <!-- Main Content -->
     <main id="main-content" class="main-content" role="main"></main>
 
+    <!-- Footer -->
     <footer role="contentinfo">
       <div class="container">
         <p>&copy; 2025 StoryShare - Dicoding Submission</p>
