@@ -1,0 +1,88 @@
+/* Dark Theme (Default) - GitHub-inspired #0d1117 with glamorous touch */
+[data-theme="dark"] {
+    /* Background Colors */
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #21262d;
+    --bg-hover: #30363d;
+    --bg-accent: #58a6ff;
+    --bg-input: #0d1117;
+    --bg-card: #161b22;
+
+    /* Text Colors */
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-tertiary: #6e7681;
+    --text-inverse: #0d1117;
+    --text-link: #58a6ff;
+    --text-link-hover: #79c0ff;
+
+    /* Border Colors */
+    --border-primary: #30363d;
+    --border-secondary: #21262d;
+    --border-focus: #58a6ff;
+    --border-input: #30363d;
+    --border-input-focus: #58a6ff;
+
+    /* Status Colors */
+    --color-success: #3fb950;
+    --color-error: #f85149;
+    --color-warning: #d29922;
+    --color-info: #58a6ff;
+
+    /* Accent Gradients */
+    --gradient-accent: linear-gradient(135deg, #58a6ff 0%, #7c3aed 100%);
+    --gradient-card: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+}
+
+/* Light Theme - Clean and minimal */
+[data-theme="light"] {
+    /* Background Colors */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f6f8fa;
+    --bg-tertiary: #eaeef2;
+    --bg-hover: #dfe3e8;
+    --bg-accent: #0969da;
+    --bg-input: #ffffff;
+    --bg-card: #ffffff;
+
+    /* Text Colors */
+    --text-primary: #24292f;
+    --text-secondary: #57606a;
+    --text-tertiary: #6e7781;
+    --text-inverse: #ffffff;
+    --text-link: #0969da;
+    --text-link-hover: #0550ae;
+
+    /* Border Colors */
+    --border-primary: #d0d7de;
+    --border-secondary: #eaeef2;
+    --border-focus: #0969da;
+    --border-input: #d0d7de;
+    --border-input-focus: #0969da;
+
+    /* Status Colors */
+    --color-success: #1a7f37;
+    --color-error: #cf222e;
+    --color-warning: #9a6700;
+    --color-info: #0969da;
+
+    /* Accent Gradients */
+    --gradient-accent: linear-gradient(135deg, #0969da 0%, #6e40c9 100%);
+    --gradient-card: linear-gradient(135deg, #ffffff 0%, #f6f8fa 100%);
+}
+
+/* Theme-specific shadows */
+[data-theme="dark"] {
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="light"] {
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.12);
+}

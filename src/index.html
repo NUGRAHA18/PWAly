@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Aplikasi berbagi cerita dan pengalaman seputar Dicoding"
+    />
+
+    <link rel="shortcut icon" href="favicon.png" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+
+    <title>StoryShare - Berbagi Cerita Dicoding</title>
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link">Skip to content</a>
+
+    <header role="banner">
+      <div class="main-header container">
+        <a class="brand-name" href="#/">StoryShare</a>
+
+        <button
+          id="theme-toggle"
+          class="theme-toggle"
+          aria-label="Toggle dark/light theme"
+          title="Toggle Theme"
+        >
+          🌙
+        </button>
+
+        <nav
+          id="navigation-drawer"
+          class="navigation-drawer"
+          role="navigation"
+          aria-label="Main navigation"
+        >
+          <ul id="nav-list" class="nav-list">
+            <li><a href="#/">Home</a></li>
+            <li><a href="#/add-story">Tambah Cerita</a></li>
+            <li id="auth-nav"></li>
+          </ul>
+        </nav>
+
+        <button
+          id="drawer-button"
+          class="drawer-button"
+          aria-label="Toggle navigation menu"
+          aria-expanded="false"
+          aria-controls="navigation-drawer"
+        >
+          ☰
+        </button>
+      </div>
+    </header>
+
+    <main id="main-content" class="main-content" role="main"></main>
+
+    <footer role="contentinfo">
+      <div class="container">
+        <p>&copy; 2025 StoryShare - Dicoding Submission</p>
+      </div>
+    </footer>
+  </body>
+</html>

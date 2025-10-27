@@ -1,0 +1,57 @@
+class ThemeHandler {
+  constructor() {
+    this.themeKey = "app-theme";
+    this.currentTheme = this._getStoredTheme() || "dark";
+    this._initTheme();
+  }
+
+  _getStoredTheme() {
+    return localStorage.getItem(this.themeKey);
+  }
+
+  _setStoredTheme(theme) {
+    localStorage.setItem(this.themeKey, theme);
+  }
+
+  _initTheme() {
+    document.documentElement.setAttribute("data-theme", this.currentTheme);
+    this._updateThemeButton();
+  }
+
+  _updateThemeButton() {
+    const themeButton = document.getElementById("theme-toggle");
+    if (themeButton) {
+      themeButton.textContent = this.currentTheme === "dark" ? "☀️" : "🌙";
+      themeButton.setAttribute(
+        "aria-label",
+        this.currentTheme === "dark"
+          ? "Switch to light theme"
+          : "Switch to dark theme"
+      );
+    }
+  }
+
+  toggleTheme() {
+    this.currentTheme = this.currentTheme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", this.currentTheme);
+    this._setStoredTheme(this.currentTheme);
+    this._updateThemeButton();
+  }
+
+  getTheme() {
+    return this.currentTheme;
+  }
+
+  setTheme(theme) {
+    if (theme !== "dark" && theme !== "light") {
+      console.error('Invalid theme. Use "dark" or "light"');
+      return;
+    }
+    this.currentTheme = theme;
+    document.documentElement.setAttribute("data-theme", this.currentTheme);
+    this._setStoredTheme(this.currentTheme);
+    this._updateThemeButton();
+  }
+}
+
+export default ThemeHandler;
