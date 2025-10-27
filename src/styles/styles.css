@@ -5,3 +5,6 @@
 @import './components.css';
 @import './pages.css';
 @import './responsive.css';
+@import './navbar-pro.css';
+@import './variable.css';
+@import './transitions.css'
