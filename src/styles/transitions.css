@@ -1,14 +1,8 @@
-/* --- Custom View Transitions --- */
-
-/* Durasi animasi transisi */
 :root {
     --transition-duration: 300ms;
-    /* Anda bisa sesuaikan durasi ini */
+    --transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* * Definisikan animasi keyframes 
- * Kita akan mengkombinasikan fade dan slide
- */
 @keyframes fade-in {
     from {
         opacity: 0;
@@ -29,57 +23,41 @@
     }
 }
 
-@keyframes slide-from-right {
+@keyframes scale-down {
     from {
-        transform: translateX(50px);
-    }
-
-    /* Mulai dari sedikit ke kanan */
-    to {
-        transform: translateX(0);
-    }
-}
-
-@keyframes slide-to-left {
-    from {
-        transform: translateX(0);
+        transform: scale(1);
     }
 
     to {
-        transform: translateX(-50px);
+        transform: scale(0.95);
     }
-
-    /* Berakhir sedikit ke kiri */
 }
 
-/* * Terapkan animasi ke pseudo-elements View Transition 
- * ::view-transition-old = Konten lama yang akan hilang
- * ::view-transition-new = Konten baru yang akan muncul
- */
+@keyframes scale-up {
+    from {
+        transform: scale(0.95);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
 
 ::view-transition-old(root) {
-    /* Halaman lama akan memudar dan bergeser ke kiri */
-    animation: fade-out var(--transition-duration) ease-in forwards,
-        slide-to-left var(--transition-duration) ease-in forwards;
+    animation: fade-out var(--transition-duration) var(--transition-timing-function) forwards,
+        scale-down var(--transition-duration) var(--transition-timing-function) forwards;
 }
 
 ::view-transition-new(root) {
-    /* Halaman baru akan muncul sambil bergeser dari kanan */
-    /* Ada sedikit penundaan pada fade-in agar tidak terlalu cepat bertabrakan */
-    animation: fade-in calc(var(--transition-duration) * 0.8) ease-out calc(var(--transition-duration) * 0.2) forwards,
-        slide-from-right var(--transition-duration) ease-out forwards;
+    animation: fade-in var(--transition-duration) var(--transition-timing-function) forwards,
+        scale-up var(--transition-duration) var(--transition-timing-function) forwards;
 }
 
-/* * Opsional: Mengatur durasi grup animasi agar sinkron
- * Ini memastikan transisi terasa lebih menyatu
- */
 ::view-transition-group(root),
 ::view-transition-image-pair(root) {
     animation-duration: var(--transition-duration);
 }
 
-/* * Mencegah interaksi selama transisi untuk menghindari bug visual
- */
 ::view-transition-old(root),
 ::view-transition-new(root) {
     pointer-events: none;
@@ -87,5 +65,4 @@
 
 html::view-transition {
     pointer-events: none;
-    /* Cegah interaksi selama transisi */
 }

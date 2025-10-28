@@ -7,16 +7,12 @@ class AddStoryPresenter {
   }
 
   async handleAddStory(formData) {
-    // formData diharapkan sudah berupa instance FormData
     this.view.showLoading();
-
     const result = await this.storyModel.addStory(formData);
-
     this.view.hideLoading();
 
     if (result.success) {
       this.view.showSuccess(result.message || "Story added successfully!");
-      // Redirect ke home setelah beberapa saat
       setTimeout(() => {
         window.location.hash = "#/";
       }, 1500);

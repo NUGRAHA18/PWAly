@@ -89,7 +89,6 @@ export default class LoginPage {
       await this.presenter.handleLogin(formData);
     });
 
-    // Real-time validation
     emailInput.addEventListener("blur", () => {
       const error = validators.email(emailInput.value.trim());
       this._displayFieldError("email", error);

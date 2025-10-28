@@ -1,5 +1,3 @@
-// src/scripts/pages/about/about-page.js
-
 export default class AboutPage {
   async render() {
     return `
@@ -56,8 +54,6 @@ export default class AboutPage {
                   GitHub: <a href="https://github.com/NUGRAHA18" target="_blank" rel="noopener noreferrer">NUGRAHA18</a>
                </p>
             </div>
-            {/* --- Akhir Bagian Kontak --- */}
-
           </div>
         </div>
       </section>

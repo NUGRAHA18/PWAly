@@ -1,4 +1,3 @@
-/* Auth Pages (Login/Register) */
 .auth-container {
     max-width: 450px;
     margin: 0 auto;
@@ -49,7 +48,6 @@
     text-decoration: underline;
 }
 
-/* Home Page */
 .home-hero {
     text-align: center;
     padding: var(--spacing-2xl) 0;
@@ -109,7 +107,6 @@
     margin-bottom: var(--spacing-2xl);
 }
 
-/* Story Card */
 .story-card {
     background-color: var(--bg-card);
     border: 1px solid var(--border-primary);
@@ -180,7 +177,6 @@
     gap: var(--spacing-xs);
 }
 
-/* Map Container */
 .map-container {
     background-color: var(--bg-card);
     border: 1px solid var(--border-primary);
@@ -208,7 +204,6 @@
     width: 100%;
 }
 
-/* Add Story Page */
 .add-story-container {
     max-width: 800px;
     margin: 0 auto;
@@ -260,7 +255,6 @@
     gap: var(--spacing-sm);
 }
 
-/* Image Upload */
 .image-upload-container {
     border: 2px dashed var(--border-primary);
     border-radius: var(--radius-lg);
@@ -310,7 +304,6 @@
     margin-top: var(--spacing-md);
 }
 
-/* Camera Controls */
 .camera-container {
     position: relative;
     border: 1px solid var(--border-primary);
@@ -353,7 +346,6 @@
     background-color: #fff;
 }
 
-/* Location Picker */
 .location-picker {
     border: 1px solid var(--border-primary);
     border-radius: var(--radius-lg);
@@ -377,7 +369,6 @@
     width: 100%;
 }
 
-/* Empty State */
 .empty-state {
     text-align: center;
     padding: var(--spacing-2xl);
@@ -401,12 +392,10 @@
     margin-bottom: var(--spacing-lg);
 }
 
-/* Styling untuk Location Picker di Add Story Page */
 .location-picker {
     border: 1px solid var(--border-primary);
     border-radius: var(--radius-lg);
     overflow: hidden;
-    /* Agar peta tetap di dalam border radius */
     margin-top: var(--spacing-md);
 }
 
@@ -421,31 +410,23 @@
 .location-coords {
     font-weight: var(--font-medium);
     font-family: var(--font-mono);
-    /* Tampilan font mono untuk koordinat */
     color: var(--text-primary);
 }
 
 #location-map {
     height: 300px;
-    /* Sesuaikan tinggi peta sesuai kebutuhan */
     width: 100%;
     background-color: var(--bg-secondary);
-    /* Warna latar belakang sebelum peta dimuat */
 }
 
-/* Optional: Styling untuk marker Leaflet default agar lebih terlihat */
 .leaflet-marker-icon {
     filter: brightness(1.1) saturate(1.2);
-    /* Sedikit lebih cerah */
 }
 
-/* About Page Styles */
 .about-page {
     max-width: 800px;
-    /* Batasi lebar konten agar lebih mudah dibaca */
     margin-inline: auto;
     padding-bottom: var(--spacing-2xl);
-    /* Beri jarak bawah */
 }
 
 .about-header {
@@ -477,9 +458,7 @@
 
 .about-content h2:first-of-type {
     margin-top: 0;
-    /* Hapus margin atas untuk H2 pertama */
 }
-
 
 .about-content p {
     color: var(--text-secondary);
@@ -490,7 +469,6 @@
 .about-content ul {
     list-style-position: inside;
     padding-left: 0;
-    /* Hapus padding default */
     margin-bottom: var(--spacing-lg);
     color: var(--text-secondary);
 }
@@ -501,6 +479,5 @@
 
 .about-content li strong {
     color: var(--text-primary);
-    /* Buat teks bold lebih menonjol */
     margin-right: var(--spacing-xs);
 }

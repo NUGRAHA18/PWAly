@@ -1,5 +1,3 @@
-/* ===== HEADER & NAVIGATION ===== */
-
 header {
     background-color: rgba(var(--bg-secondary-rgb), 0.95);
     border-bottom: 1px solid var(--border-primary);
@@ -7,6 +5,8 @@ header {
     top: 0;
     z-index: var(--z-sticky);
     backdrop-filter: blur(20px) saturate(180%);
+    view-transition-name: main-header;
+    contain: layout;
 }
 
 .main-header {
@@ -17,7 +17,6 @@ header {
     gap: var(--spacing-lg);
 }
 
-/* Brand Logo */
 .brand-name {
     font-size: 1.25rem;
     font-weight: 700;
@@ -32,7 +31,6 @@ header {
     opacity: 0.8;
 }
 
-/* Desktop Navigation */
 .navigation-drawer {
     display: flex;
     align-items: center;
@@ -70,7 +68,6 @@ header {
     background-color: var(--bg-tertiary);
 }
 
-/* Header Actions */
 .header-actions {
     display: flex;
     align-items: center;
@@ -97,7 +94,6 @@ header {
     border-color: var(--border-focus);
 }
 
-/* Auth Section Styling */
 #auth-nav {
     display: flex;
     align-items: center;
@@ -129,7 +125,6 @@ header {
     background-color: var(--bg-hover);
 }
 
-/* Logout Button Specific */
 #auth-nav a[href="#"]:last-child {
     color: var(--text-error);
 }
@@ -138,12 +133,10 @@ header {
     background-color: rgba(239, 68, 68, 0.1);
 }
 
-/* Drawer Button - Hidden on Desktop */
 .drawer-button {
     display: none;
 }
 
-/* ===== MOBILE RESPONSIVE ===== */
 @media screen and (max-width: 1023px) {
     .main-header {
         height: 56px;
@@ -156,7 +149,6 @@ header {
         transform: translateX(-50%);
     }
 
-    /* Mobile Drawer */
     .drawer-button {
         display: inline-flex;
         align-items: center;
@@ -196,7 +188,6 @@ header {
         transform: translateX(0);
     }
 
-    /* Mobile Nav List */
     .nav-list {
         flex-direction: column;
         align-items: stretch;
@@ -215,7 +206,6 @@ header {
         font-size: 1rem;
     }
 
-    /* Mobile Auth Section */
     #auth-nav {
         flex-direction: column;
         align-items: stretch;
@@ -240,7 +230,6 @@ header {
     }
 }
 
-/* Tablet Adjustments */
 @media screen and (min-width: 768px) and (max-width: 1023px) {
     .main-header {
         height: 60px;
@@ -251,7 +240,6 @@ header {
     }
 }
 
-/* Large Desktop */
 @media screen and (min-width: 1280px) {
     .main-header {
         height: 64px;
@@ -266,7 +254,6 @@ header {
     }
 }
 
-/* Navigation Container */
 .nav-container {
     display: flex;
     align-items: center;
@@ -274,7 +261,6 @@ header {
     margin-left: auto;
 }
 
-/* Theme Toggle Button */
 .theme-toggle {
     padding: var(--spacing-sm);
     background-color: var(--bg-tertiary);
@@ -297,12 +283,10 @@ header {
     border-color: var(--border-focus);
 }
 
-/* Navigation Drawer */
 .navigation-drawer {
     order: 1;
 }
 
-/* Mobile Navigation */
 @media screen and (max-width: 1023px) {
     .navigation-drawer {
         min-height: 100vh;
@@ -328,7 +312,6 @@ header {
     }
 }
 
-/* Desktop Navigation */
 @media screen and (min-width: 1024px) {
     .navigation-drawer {
         min-height: auto;
@@ -394,14 +377,12 @@ header {
     color: var(--text-inverse);
 }
 
-/* Main Content */
 .main-content {
     flex: 1;
     padding-block: var(--spacing-2xl);
     min-height: calc(100vh - 140px);
 }
 
-/* Footer */
 footer {
     background-color: var(--bg-secondary);
     border-top: 1px solid var(--border-primary);
@@ -415,7 +396,6 @@ footer p {
     text-align: center;
 }
 
-/* Buttons */
 .btn {
     padding: var(--spacing-sm) var(--spacing-lg);
     border-radius: var(--radius-md);
@@ -488,7 +468,6 @@ footer p {
     width: 100%;
 }
 
-/* Cards */
 .card {
     background-color: var(--bg-card);
     border: 1px solid var(--border-primary);
@@ -534,7 +513,6 @@ footer p {
     align-items: center;
 }
 
-/* Forms */
 .form-group {
     margin-bottom: var(--spacing-lg);
 }
@@ -588,7 +566,6 @@ footer p {
     margin-top: var(--spacing-xs);
 }
 
-/* Alert Messages */
 .alert {
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
@@ -621,7 +598,6 @@ footer p {
     border-color: var(--color-info);
 }
 
-/* Badge */
 .badge {
     display: inline-flex;
     align-items: center;
@@ -643,7 +619,6 @@ footer p {
     color: var(--color-error);
 }
 
-/* Loading Spinner */
 .spinner {
     display: inline-block;
     width: 20px;
@@ -673,7 +648,6 @@ footer p {
     min-height: 200px;
 }
 
-/* Modal Backdrop */
 .modal-backdrop {
     position: fixed;
     inset: 0;
@@ -685,7 +659,6 @@ footer p {
     padding: var(--spacing-md);
 }
 
-/* Avatar */
 .avatar {
     width: 40px;
     height: 40px;
@@ -702,4 +675,116 @@ footer p {
 .avatar-lg {
     width: 60px;
     height: 60px;
+}
+
+:root {
+    --transition-duration: 300ms;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fade-out {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes slide-from-right {
+    from {
+        transform: translateX(50px);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slide-to-left {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(-50px);
+    }
+}
+
+:root {
+    --transition-duration: 1500ms;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fade-out {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes slide-from-right {
+    from {
+        transform: translateX(50px);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slide-to-left {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(-50px);
+    }
+}
+
+::view-transition-old(root) {
+    animation: fade-out var(--transition-duration) ease-in forwards,
+        slide-to-left var(--transition-duration) ease-in forwards;
+}
+
+::view-transition-new(root) {
+    animation: fade-in calc(var(--transition-duration) * 0.8) ease-out calc(var(--transition-duration) * 0.2) forwards,
+        slide-from-right var(--transition-duration) ease-out forwards;
+}
+
+::view-transition-group(root),
+::view-transition-image-pair(root) {
+    animation-duration: var(--transition-duration);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    pointer-events: none;
+}
+
+html::view-transition {
+    pointer-events: none;
 }

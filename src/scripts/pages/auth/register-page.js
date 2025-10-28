@@ -126,7 +126,6 @@ export default class RegisterPage {
       });
     });
 
-    // Real-time validation
     nameInput.addEventListener("blur", () => {
       const error = validators.required(nameInput.value.trim(), "Name");
       this._displayFieldError("name", error);
