@@ -5,11 +5,16 @@ class StoryCard {
     const hasLocation = story.lat && story.lon;
 
     return `
-      <article class="story-card" data-story-id="${story.id}" data-lat="${
-      story.lat || ""
-    }" data-lon="${story.lon || ""}">
-        <img 
-          src="${story.photoUrl}" 
+      <article
+        class="story-card"
+        data-story-id="${story.id}"
+        data-lat="${story.lat || ""}"
+        data-lon="${story.lon || ""}"
+        tabindex="0"  aria-label="Story by ${
+          story.name
+        }: ${story.description.substring(0, 50)}..." >
+        <img
+          src="${story.photoUrl}"
           alt="${story.description}"
           class="story-card-image"
           loading="lazy"

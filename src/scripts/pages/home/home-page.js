@@ -17,26 +17,19 @@ export default class HomePage {
     const user = authGuard.getCurrentUser();
 
     return `
-      <section class="container">
+      <section class="container" id="home-page-container"> 
         <div class="home-hero">
           <h1>Selamat Datang, ${user?.name || "User"}!</h1>
           <p>Bagikan ceritamu dengan dunia</p>
         </div>
 
         <div class="stories-controls">
-          <div class="stories-header">
-            <h2 class="stories-title">Cerita Terbaru</h2>
-            <span class="stories-count" id="stories-count"></span>
-          </div>
-          <div class="stories-actions">
-            <a href="#/add-story" class="btn btn-primary">
-              + Tambah Cerita
-            </a>
-          </div>
+       
         </div>
 
+        
         <div class="home-content">
-          <div class="home-map">
+          <div class="home-map"> 
             <div class="map-container">
               <div class="map-header">
                 <h3 class="map-title">Peta Cerita</h3>
@@ -45,7 +38,7 @@ export default class HomePage {
             </div>
           </div>
 
-          <div class="home-stories">
+          <div class="home-stories"> 
             <div id="stories-container">
               ${LoadingSpinner.render()}
             </div>
@@ -63,7 +56,8 @@ export default class HomePage {
 
     await this.presenter.loadStories({ location: 1 });
 
-    this._setupCardHoverEvents();
+    // Panggil fungsi yang sudah diperbarui
+    this._setupCardInteractionEvents();
   }
 
   showLoading() {
@@ -89,6 +83,8 @@ export default class HomePage {
     if (countElement) {
       countElement.textContent = `(${stories.length} cerita)`;
     }
+    // Panggil ulang setup interaksi setelah story dirender
+    this._setupCardInteractionEvents();
   }
 
   displayMap(stories) {
@@ -122,21 +118,48 @@ export default class HomePage {
     }
   }
 
-  _setupCardHoverEvents() {
-    const cards = document.querySelectorAll(".story-card");
+  /**
+   * Mengatur event listener untuk interaksi mouse dan keyboard pada kartu cerita.
+   */
+  _setupCardInteractionEvents() {
+    // Nama fungsi diperbarui
+    // Gunakan event delegation jika memungkinkan, tapi untuk simplicity kita attach langsung
+    const container = document.getElementById("stories-container");
+    if (!container) return; // Pastikan container ada
+
+    const cards = container.querySelectorAll(".story-card"); // Cari kartu di dalam container
 
     cards.forEach((card) => {
       const storyId = card.dataset.storyId;
+      const lat = card.dataset.lat;
+      const lon = card.dataset.lon;
 
+      // Fungsi untuk memicu highlight marker di peta
+      const triggerHighlight = () => {
+        if (this.mapHandler && storyId && lat && lon) {
+          // Hanya highlight jika ada lokasi
+          this.mapHandler.highlightMarker(storyId);
+        } else {
+          console.log(`Story card ${storyId} activated, but has no location.`);
+          // Aksi opsional lain jika tidak ada lokasi
+        }
+      };
+
+      // Listener untuk mouse hover (jika masih diinginkan)
       card.addEventListener("mouseenter", () => {
-        if (this.mapHandler) {
+        if (this.mapHandler && storyId && lat && lon) {
           this.mapHandler.highlightMarker(storyId);
         }
       });
 
-      card.addEventListener("click", () => {
-        if (this.mapHandler) {
-          this.mapHandler.highlightMarker(storyId);
+      // Listener untuk klik mouse
+      card.addEventListener("click", triggerHighlight);
+
+      // Listener untuk keyboard (Enter atau Spasi)
+      card.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault(); // Mencegah scroll saat menekan spasi
+          triggerHighlight();
         }
       });
     });
@@ -150,6 +173,64 @@ export default class HomePage {
           ❌ ${message}
         </div>
       `;
+    }
+  }
+
+  // Tambahkan method destroy untuk membersihkan map saat halaman berganti
+
+  _scrollListener = null;
+
+  async afterRender() {
+    if (!authGuard.requireAuth()) return;
+
+    this.mapHandler = new MapHandler("map");
+    this.mapHandler.init();
+
+    await this.presenter.loadStories({ location: 1 });
+    this._setupCardInteractionEvents();
+
+    // Panggil fungsi setup scroll listener (Baru)
+    this._setupScrollListener();
+  }
+  _setupScrollListener() {
+    const container = document.getElementById("home-page-container");
+    const heroElement = document.querySelector(".home-hero"); // Elemen pemicu
+
+    if (!container || !heroElement) return; // Pastikan elemen ada
+
+    // Tentukan tinggi trigger (misalnya, setelah hero tidak terlihat)
+    const triggerHeight = heroElement.offsetHeight;
+
+    // Buat fungsi listener
+    this._scrollListener = () => {
+      if (window.scrollY > triggerHeight) {
+        // Jika sudah scroll melewati hero, tambahkan kelas
+        container.classList.add("scrolled-layout");
+      } else {
+        // Jika kembali ke atas, hapus kelas
+        container.classList.remove("scrolled-layout");
+      }
+    };
+
+    // Tambahkan listener ke window
+    window.addEventListener("scroll", this._scrollListener);
+
+    // Panggil sekali saat load untuk set state awal jika user refresh di tengah halaman
+    this._scrollListener();
+  }
+  async destroy() {
+    // Hapus scroll listener jika ada
+    if (this._scrollListener) {
+      window.removeEventListener("scroll", this._scrollListener);
+      this._scrollListener = null; // Hapus referensi
+      console.log("Scroll listener removed.");
+    }
+
+    // Hapus map handler
+    if (this.mapHandler) {
+      this.mapHandler.destroy();
+      this.mapHandler = null;
+      console.log("HomePage destroyed, map handler cleaned up.");
     }
   }
 }

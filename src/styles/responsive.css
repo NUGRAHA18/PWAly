@@ -44,10 +44,10 @@
         height: 220px;
     }
 
-    /* Map */
-    #map {
+    /* Map (Tablet - Mungkin tidak perlu, akan diatur di desktop) */
+    /* #map {
         height: 600px;
-    }
+    } */
 
     /* Add Story */
     .add-story-title {
@@ -55,6 +55,7 @@
     }
 
     #location-map {
+        /* Peta di halaman Add Story */
         height: 350px;
     }
 }
@@ -113,13 +114,7 @@
         font-size: var(--text-xl);
     }
 
-    /* Stories Grid */
-    .stories-grid {
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-        gap: var(--spacing-xl);
-    }
-
-    /* Story Card */
+    /* Story Card Image (Desktop) */
     .story-card-image {
         height: 240px;
     }
@@ -135,38 +130,110 @@
         grid-column: 1 / -1;
     }
 
-    /* Map */
-    #map {
-        height: 700px;
-    }
-
     #location-map {
+        /* Peta di halaman Add Story */
         height: 400px;
     }
 
-    /* Split View for Home Page */
+    /* ----- Home Page Dynamic Layout ----- */
+
+    /* ----- Layout Awal (Desktop) ----- */
     .home-content {
+        display: block;
+        /* Awalnya tumpuk */
+    }
+
+    .home-map {
+        position: static;
+        margin-bottom: var(--spacing-xl);
+        grid-column: auto;
+        /* Reset grid */
+        /* Animasi untuk margin */
+        transition: margin-bottom 0.4s ease-in-out;
+    }
+
+    #map {
+        /* Peta di halaman Home */
+        height: 450px;
+        /* Tinggi awal */
+        /* Animasi untuk tinggi */
+        transition: height 0.4s ease-in-out;
+    }
+
+    .home-stories {
+        grid-column: auto;
+        /* Reset grid */
+    }
+
+    .stories-grid {
+        /* Grid untuk card cerita */
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: var(--spacing-xl);
+    }
+
+    /* ----- Layout Saat Scrolled (Desktop) ----- */
+    #home-page-container.scrolled-layout .home-content {
         display: grid;
         grid-template-columns: 1fr 1fr;
+        /* 2 kolom */
         gap: var(--spacing-xl);
         align-items: start;
     }
 
-    .home-stories {
+    #home-page-container.scrolled-layout .home-map {
+        grid-column: 2;
+        position: sticky;
+        top: var(--spacing-xl);
+        margin-bottom: 0;
+        transition: margin-bottom 0.4s ease-in-out;
+
+    }
+
+    #home-page-container.scrolled-layout #map {
+        height: 40vh;
+        transition: height 0.4s ease-in-out;
+        /* Peta lebih tinggi saat di samping */
+    }
+
+    #home-page-container.scrolled-layout .home-stories {
         grid-column: 1;
     }
 
-    .home-map {
-        grid-column: 2;
-        position: sticky;
-        top: 90px;
+    #map:not(#home-page-container.scrolled-layout #map) {
+        height: 200px;
+        /* Tinggi awal */
+        transition: height 0.4s ease-in-out;
+        /* Transisi untuk tinggi */
+    }
+
+    .home-map:not(#home-page-container.scrolled-layout .home-map) {
+        margin-bottom: var(--spacing-xl);
+        transition: margin-bottom 0.4s ease-in-out;
+        /* Transisi untuk margin */
     }
 }
 
 /* Large Desktop (1280px and up) */
 @media screen and (min-width: 1280px) {
+    #home-page-container.scrolled-layout .home-map {
+        /* Penyesuaian 'top' mungkin diperlukan jika header berubah tinggi */
+        /* top: calc(var(--spacing-xl) + 20px); */
+    }
+
+    #home-page-container.scrolled-layout #map {
+        height: 75vh;
+        /* Sedikit lebih tinggi di layar besar */
+    }
+
     .stories-grid {
+        /* Lebar minimum kartu cerita lebih besar */
         grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    }
+
+    /* Tinggi peta awal untuk Large Desktop jika berbeda */
+    /* Hapus jika sama dengan 1024px */
+    #map:not(#home-page-container.scrolled-layout #map) {
+        height: 500px;
     }
 }
 
@@ -178,7 +245,11 @@
     .drawer-button,
     .theme-toggle,
     .btn,
-    .navigation-drawer {
+    .navigation-drawer,
+    .home-map
+
+    /* Sembunyikan peta saat print */
+        {
         display: none;
     }
 
@@ -191,6 +262,16 @@
     .story-card {
         break-inside: avoid;
         border: 1px solid #000;
+        box-shadow: none;
+        /* Hapus shadow saat print */
+        transform: none;
+        /* Hapus transform saat print */
+    }
+
+    .home-content,
+    .stories-grid {
+        display: block !important;
+        /* Pastikan layout normal saat print */
     }
 }
 
@@ -203,6 +284,8 @@
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+        /* Matikan smooth scroll */
     }
 }
 
@@ -218,7 +301,10 @@
 
     .btn,
     .form-input,
-    .card {
-        border: 2px solid currentColor;
+    .card,
+    .map-container,
+    .location-picker {
+        border: 2px solid currentColor !important;
+        /* Gunakan border lebih tebal */
     }
 }
