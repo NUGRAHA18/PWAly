@@ -1,7 +1,9 @@
 :root[data-theme="dark"] {
+    /* --bg-secondary (Dark Mode) adalah #161b22 */
     --bg-secondary-rgb: 22, 27, 34;
 }
 
 :root[data-theme="light"] {
-    --bg-secondary-rgb: 255, 255, 255;
+    /* --bg-secondary (Light Mode) adalah #f7f9fc */
+    --bg-secondary-rgb: 247, 249, 252;
 }
