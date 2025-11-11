@@ -2,11 +2,12 @@ import CONFIG from "../config";
 
 class AuthRepository {
   constructor() {
-    this.baseUrl = CONFIG.BASE_URL;
+    this.baseUrl = CONFIG.BASE_URL; // Ini sekarang "" (kosong)
   }
 
   async register({ name, email, password }) {
     try {
+      // Path ini akan menjadi: /register
       const response = await fetch(`${this.baseUrl}/register`, {
         method: "POST",
         headers: {
@@ -15,11 +16,19 @@ class AuthRepository {
         body: JSON.stringify({ name, email, password }),
       });
 
-      const data = await response.json();
-
+      // Perbaikan Poin 4: Cek .ok sebelum parse JSON
       if (!response.ok) {
-        throw new Error(data.message || "Registration failed");
+        try {
+          // Coba parse body error jika ada
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Registration failed");
+        } catch (e) {
+          // Jika body error bukan JSON (misal HTML error 500)
+          throw new Error(e.message || "Registration failed");
+        }
       }
+
+      const data = await response.json();
 
       return {
         success: true,
@@ -35,6 +44,7 @@ class AuthRepository {
 
   async login({ email, password }) {
     try {
+      // Path ini akan menjadi: /login
       const response = await fetch(`${this.baseUrl}/login`, {
         method: "POST",
         headers: {
@@ -43,11 +53,17 @@ class AuthRepository {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
-
+      // Perbaikan Poin 4: Cek .ok sebelum parse JSON
       if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+        try {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Login failed");
+        } catch (e) {
+          throw new Error(e.message || "Login failed");
+        }
       }
+
+      const data = await response.json();
 
       return {
         success: true,
@@ -62,20 +78,21 @@ class AuthRepository {
     }
   }
 
+  // Perbaikan Poin 3: Menggunakan sessionStorage
   saveToken(token) {
-    localStorage.setItem("auth-token", token);
+    sessionStorage.setItem("auth-token", token);
   }
 
   getToken() {
-    return localStorage.getItem("auth-token");
+    return sessionStorage.getItem("auth-token");
   }
 
   saveUser(user) {
-    localStorage.setItem("auth-user", JSON.stringify(user));
+    sessionStorage.setItem("auth-user", JSON.stringify(user));
   }
 
   getUser() {
-    const userJson = localStorage.getItem("auth-user");
+    const userJson = sessionStorage.getItem("auth-user");
     return userJson ? JSON.parse(userJson) : null;
   }
 
@@ -84,8 +101,8 @@ class AuthRepository {
   }
 
   logout() {
-    localStorage.removeItem("auth-token");
-    localStorage.removeItem("auth-user");
+    sessionStorage.removeItem("auth-token");
+    sessionStorage.removeItem("auth-user");
   }
 }
 

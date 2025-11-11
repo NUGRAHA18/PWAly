@@ -7,6 +7,7 @@ class App {
   #content = null;
   #drawerButton = null;
   #navigationDrawer = null;
+  #currentPage = null;
 
   constructor({ navigationDrawer, drawerButton, content }) {
     this.#content = content;
@@ -58,7 +59,7 @@ class App {
           e.preventDefault();
           authModel.logout();
           window.location.hash = "#/login";
-          window.location.reload();
+          this._updateNavigation();
         });
       }
     } else {
@@ -70,8 +71,12 @@ class App {
   }
 
   async renderPage() {
+    if (this.#currentPage && typeof this.#currentPage.destroy === "function") {
+      await this.#currentPage.destroy();
+    }
     const url = getActiveRoute();
     const page = routes[url];
+    this.#currentPage = page;
 
     if (page) {
       this.#content.innerHTML = await page.render();
@@ -90,6 +95,7 @@ class App {
           </div>
         </div>
       `;
+      this.#currentPage = null;
     }
   }
 }
