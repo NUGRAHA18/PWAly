@@ -1,5 +1,5 @@
 const CONFIG = {
-  BASE_URL: "",
+  BASE_URL: "https://story-api.dicoding.dev/",
   DEFAULT_LANGUAGE: "en-US",
 };
 

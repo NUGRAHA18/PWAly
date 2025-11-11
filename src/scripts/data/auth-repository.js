@@ -8,7 +8,7 @@ class AuthRepository {
   async register({ name, email, password }) {
     try {
       // Path ini akan menjadi: /register
-      const response = await fetch(`${this.baseUrl}/register`, {
+      const response = await fetch(`${this.baseUrl}/v1/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -45,7 +45,7 @@ class AuthRepository {
   async login({ email, password }) {
     try {
       // Path ini akan menjadi: /login
-      const response = await fetch(`${this.baseUrl}/login`, {
+      const response = await fetch(`${this.baseUrl}/v1/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

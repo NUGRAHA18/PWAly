@@ -33,7 +33,6 @@ class AuthPresenter {
       this.view.showSuccess("Login successful!");
       setTimeout(() => {
         window.location.hash = "#/";
-        window.location.reload();
       }, 1000);
     } else {
       this.view.showError(result.message);

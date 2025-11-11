@@ -1,109 +1,140 @@
+// Ini adalah isi yang BENAR untuk src/scripts/data/story-repository.js
 import CONFIG from "../config";
+import authRepository from "./auth-repository";
 
-class AuthRepository {
+class StoryRepository {
   constructor() {
-    this.baseUrl = CONFIG.BASE_URL; // Ini sekarang "" (kosong)
+    this.baseUrl = CONFIG.BASE_URL; // Ini "" (kosong)
   }
 
-  async register({ name, email, password }) {
+  async getStories({ page = 1, size = 20, location = 1 } = {}) {
     try {
-      // Path ini akan menjadi: /register
-      const response = await fetch(`${this.baseUrl}/register`, {
-        method: "POST",
+      const token = authRepository.getToken();
+      const params = new URLSearchParams({ page, size, location });
+
+      // Perbaikan Path: Tambahkan /v1/
+      const response = await fetch(`${this.baseUrl}/v1/stories?${params}`, {
+        method: "GET",
         headers: {
-          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name, email, password }),
       });
 
-      // Perbaikan Poin 4: Cek .ok sebelum parse JSON
+      // Perbaikan Poin 4: Cek .ok dulu
       if (!response.ok) {
         try {
-          // Coba parse body error jika ada
           const errorData = await response.json();
-          throw new Error(errorData.message || "Registration failed");
+          throw new Error(errorData.message || "Gagal mengambil data");
         } catch (e) {
-          // Jika body error bukan JSON (misal HTML error 500)
-          throw new Error(e.message || "Registration failed");
+          throw new Error(e.message || "Gagal mengambil data");
         }
+      }
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Invalid response format");
       }
 
       const data = await response.json();
 
       return {
         success: true,
-        message: data.message,
+        data: data.listStory || [],
       };
     } catch (error) {
+      console.error("Get stories error:", error);
       return {
         success: false,
-        message: error.message || "Network error occurred",
+        message: error.message || "Terjadi kesalahan",
+        data: [],
       };
     }
   }
 
-  async login({ email, password }) {
+  async getStoryDetail(id) {
     try {
-      // Path ini akan menjadi: /login
-      const response = await fetch(`${this.baseUrl}/login`, {
-        method: "POST",
+      const token = authRepository.getToken();
+
+      // Perbaikan Path: Tambahkan /v1/
+      const response = await fetch(`${this.baseUrl}/v1/stories/${id}`, {
+        method: "GET",
         headers: {
-          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ email, password }),
       });
 
-      // Perbaikan Poin 4: Cek .ok sebelum parse JSON
+      // Perbaikan Poin 4: Cek .ok dulu
       if (!response.ok) {
         try {
           const errorData = await response.json();
-          throw new Error(errorData.message || "Login failed");
+          throw new Error(errorData.message || "Gagal mengambil detail");
         } catch (e) {
-          throw new Error(e.message || "Login failed");
+          throw new Error(e.message || "Gagal mengambil detail");
         }
+      }
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Invalid response format");
       }
 
       const data = await response.json();
 
       return {
         success: true,
-        data: data.loginResult,
-        message: data.message,
+        data: data.story,
       };
     } catch (error) {
+      console.error("Get story detail error:", error);
       return {
         success: false,
-        message: error.message || "Network error occurred",
+        message: error.message || "Terjadi kesalahan",
       };
     }
   }
 
-  // Perbaikan Poin 3: Menggunakan sessionStorage
-  saveToken(token) {
-    sessionStorage.setItem("auth-token", token);
-  }
+  async addStory(formData) {
+    try {
+      const token = authRepository.getToken();
 
-  getToken() {
-    return sessionStorage.getItem("auth-token");
-  }
+      // Perbaikan Path: Tambahkan /v1/
+      const response = await fetch(`${this.baseUrl}/v1/stories`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
 
-  saveUser(user) {
-    sessionStorage.setItem("auth-user", JSON.stringify(user));
-  }
+      // Perbaikan Poin 4: Cek .ok dulu
+      if (!response.ok) {
+        try {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Gagal menambahkan cerita");
+        } catch (e) {
+          throw new Error(e.message || "Gagal menambahkan cerita");
+        }
+      }
 
-  getUser() {
-    const userJson = sessionStorage.getItem("auth-user");
-    return userJson ? JSON.parse(userJson) : null;
-  }
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Invalid response format");
+      }
 
-  isAuthenticated() {
-    return this.getToken() !== null;
-  }
+      const data = await response.json();
 
-  logout() {
-    sessionStorage.removeItem("auth-token");
-    sessionStorage.removeItem("auth-user");
+      return {
+        success: true,
+        message: data.message || "Cerita berhasil ditambahkan",
+      };
+    } catch (error) {
+      console.error("Add story error:", error);
+      return {
+        success: false,
+        message: error.message || "Terjadi kesalahan",
+      };
+    }
   }
 }
 
-export default new AuthRepository();
+export default new StoryRepository();
