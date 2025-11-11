@@ -1,3 +1,4 @@
+import PushNotificationHelper from "../../utils/push-notification-helper";
 export default class AboutPage {
   async render() {
     return `
@@ -61,6 +62,12 @@ export default class AboutPage {
   }
 
   async afterRender() {
-    console.log("About page rendered");
+    const subscribeButton = document.getElementById("subscribe-push-button");
+    if (subscribeButton) {
+      subscribeButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        PushNotificationHelper.askPermission();
+      });
+    }
   }
 }

@@ -1,0 +1,41 @@
+{
+  "name": "StoryShare - Berbagi Cerita",
+  "short_name": "StoryShare",
+  "description": "Aplikasi berbagi cerita dan pengalaman seputar Dicoding",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#161b22",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "favicon.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Tampilan Home StoryShare"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Tambah Cerita Baru",
+      "short_name": "Tambah",
+      "description": "Buka halaman untuk menambah cerita baru",
+      "url": "/index.html#/add-story",
+      "icons": [{ "src": "favicon.png", "sizes": "192x192" }]
+    }
+  ]
+}
