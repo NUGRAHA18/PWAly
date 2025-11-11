@@ -31,33 +31,40 @@
         <a class="brand-name" href="#/">StoryShare</a>
 
         <!-- Main Navigation -->
-        <ul class="nav-list">
-          <li><a href="#/">Home</a></li>
-          <li><a href="#/add-story">Tambah Cerita</a></li>
-          <li><a href="#/about">Tentang</a></li>
-          <li id="auth-nav"></li>
+        <nav
+          id="navigation-drawer"
+          class="navigation-drawer"
+          role="navigation"
+          aria-label="Main navigation"
+        >
+          <ul class="nav-list">
+            <li><a href="#/">Home</a></li>
+            <li><a href="#/add-story">Tambah Cerita</a></li>
+            <li><a href="#/about">Tentang</a></li>
+            <li id="auth-nav"></li>
 
-          <li>
-            <button
-              id="notification-toggle"
-              class="theme-toggle"
-              aria-label="Toggle notifications"
-              title="Toggle Notifications"
-            >
-              🔔
-            </button>
-          </li>
-          <li>
-            <button
-              id="theme-toggle"
-              class="theme-toggle"
-              aria-label="Toggle theme"
-              title="Toggle Theme"
-            >
-              🌙
-            </button>
-          </li>
-        </ul>
+            <li>
+              <button
+                id="notification-toggle"
+                class="theme-toggle"
+                aria-label="Toggle notifications"
+                title="Toggle Notifications"
+              >
+                🔔
+              </button>
+            </li>
+            <li>
+              <button
+                id="theme-toggle"
+                class="theme-toggle"
+                aria-label="Toggle theme"
+                title="Toggle Theme"
+              >
+                🌙
+              </button>
+            </li>
+          </ul>
+        </nav>
         <!-- Header Actions -->
         <div class="header-actions">
           <button

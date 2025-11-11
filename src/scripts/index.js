@@ -36,6 +36,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       themeHandler.toggleTheme();
     });
   }
+  const notificationToggle = document.getElementById("notification-toggle");
+  if (notificationToggle) {
+    notificationToggle.addEventListener("click", () => {
+      PushNotificationHelper.handleSubscriptionToggle();
+    });
+  }
 
   const app = new App({
     content: document.querySelector("#main-content"),

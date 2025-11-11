@@ -1,6 +1,9 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+// --- TAMBAHKAN IMPOR INI ---
+const WorkboxWebpackPlugin = require("workbox-webpack-plugin");
+// -----------------------------
 
 module.exports = {
   entry: {
@@ -32,11 +35,15 @@ module.exports = {
           from: path.resolve(__dirname, "src/manifest.json"),
           to: path.resolve(__dirname, "dist/"),
         },
-        {
-          from: path.resolve(__dirname, "src/service-worker.js"),
-          to: path.resolve(__dirname, "dist/"),
-        },
+        // Pastikan service-worker.js TIDAK ada di sini
       ],
     }),
+
+    // --- TAMBAHKAN BLOK PLUGIN INI ---
+    new WorkboxWebpackPlugin.InjectManifest({
+      swSrc: path.resolve(__dirname, "src/service-worker.js"),
+      swDest: "service-worker.js",
+    }),
+    // ---------------------------------
   ],
 };
