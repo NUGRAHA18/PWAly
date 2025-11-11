@@ -21,5 +21,15 @@ module.exports = merge(common, {
         warnings: true,
       },
     },
+
+    // --- TAMBAHKAN BLOK PROXY YANG HILANG INI ---
+    proxy: [
+      {
+        context: ["/register", "/login", "/v1"], // Tangkap semua path API
+        target: "https://story-api.dicoding.dev",
+        changeOrigin: true,
+      },
+    ],
+    // --- BATAS PENAMBAHAN ---
   },
 });

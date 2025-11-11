@@ -94,46 +94,41 @@ class StoryRepository {
   }
 
   async addStory(formData) {
-    try {
-      const token = authRepository.getToken();
+    // HAPUS "try {" DARI SINI
 
-      // Perbaikan Path: Tambahkan /v1/
-      const response = await fetch(`${this.baseUrl}/v1/stories`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+    const token = authRepository.getToken();
 
-      // Perbaikan Poin 4: Cek .ok dulu
-      if (!response.ok) {
-        try {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Gagal menambahkan cerita");
-        } catch (e) {
-          throw new Error(e.message || "Gagal menambahkan cerita");
-        }
+    // Perbaikan Path: this.baseUrl adalah "" dan kita panggil /v1/
+    const response = await fetch(`${this.baseUrl}/v1/stories`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      try {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Gagal menambahkan cerita");
+      } catch (e) {
+        throw new Error(e.message || "Gagal menambahkan cerita");
       }
-
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Invalid response format");
-      }
-
-      const data = await response.json();
-
-      return {
-        success: true,
-        message: data.message || "Cerita berhasil ditambahkan",
-      };
-    } catch (error) {
-      console.error("Add story error:", error);
-      return {
-        success: false,
-        message: error.message || "Terjadi kesalahan",
-      };
     }
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new Error("Invalid response format");
+    }
+
+    const data = await response.json();
+
+    return {
+      success: true,
+      message: data.message || "Cerita berhasil ditambahkan",
+    };
+
+    // HAPUS BLOK "catch (error) { ... }" DARI SINI
   }
 }
 

@@ -2,9 +2,9 @@ import "sweetalert2/dist/sweetalert2.min.css";
 import "../styles/styles.css";
 import App from "./pages/app";
 import ThemeHandler from "./utils/theme-handler";
-import "sweetalert2/dist/sweetalert2.min.css";
 import PushNotificationHelper from "./utils/push-notification-helper";
 
+// Fungsi untuk mendaftarkan Service Worker
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
     try {
@@ -20,13 +20,6 @@ const registerServiceWorker = async () => {
   }
 };
 
-const notificationToggle = document.getElementById("notification-toggle");
-if (notificationToggle) {
-  notificationToggle.addEventListener("click", () => {
-    PushNotificationHelper.handleSubscriptionToggle();
-  });
-}
-
 document.addEventListener("DOMContentLoaded", async () => {
   const themeHandler = new ThemeHandler();
 
@@ -36,6 +29,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       themeHandler.toggleTheme();
     });
   }
+
+  // Event listener untuk tombol notifikasi
   const notificationToggle = document.getElementById("notification-toggle");
   if (notificationToggle) {
     notificationToggle.addEventListener("click", () => {
@@ -50,6 +45,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   await app.renderPage();
+
+  // Panggil registrasi Service Worker
   await registerServiceWorker();
 
   window.addEventListener("hashchange", async () => {

@@ -137,7 +137,12 @@ export default class AddStoryPage {
       this._clearErrors();
 
       const description = descriptionInput.value.trim();
-      const photoError = !this._photoFile ? "Photo is required" : null;
+      const photoFile = this._photoFile; // Ambil File object
+      const lat = latInput.value;
+      const lon = lonInput.value;
+
+      // Validasi di sisi View
+      const photoError = !photoFile ? "Photo is required" : null;
       const descriptionError = validators.required(description, "Description");
 
       let isValid = true;
@@ -149,25 +154,20 @@ export default class AddStoryPage {
         this._displayFieldError("photo", photoError);
         isValid = false;
       }
-
       if (!isValid) return;
 
-      const formData = new FormData();
-      formData.append("description", description);
-      formData.append(
-        "photo",
-        this._photoFile,
-        this._photoFile.name || "camera-capture.jpg"
-      );
+      // --- PERUBAHAN UTAMA DI SINI ---
+      // 1. Buat object data mentah (File object bisa disimpan di IndexedDB)
+      const storyData = {
+        description: description,
+        photo: photoFile,
+        lat: lat || null, // Kirim null jika kosong
+        lon: lon || null, // Kirim null jika kosong
+      };
 
-      const lat = latInput.value;
-      const lon = lonInput.value;
-      if (lat && lon) {
-        formData.append("lat", lat);
-        formData.append("lon", lon);
-      }
-
-      await this.presenter.handleAddStory(formData);
+      // 2. Kirim object mentah ke presenter, BUKAN FormData
+      await this.presenter.handleAddStory(storyData);
+      // --- BATAS PERUBAHAN ---
     });
   }
 
