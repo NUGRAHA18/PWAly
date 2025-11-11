@@ -8,43 +8,36 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   // console.log('Service Worker: Fetching', event.request.url);
+  // Logika caching akan ditambahkan di sini
 });
 
-self.addEventListener("push", (event) => {
-  console.log("Service Worker: Push Received.");
-});
+// --- Kriteria 2: Menerapkan Push Notification ---
 
-self.addEventListener("notificationclick", (event) => {
-  console.log("Service Worker: Notification clicked.");
-});
-
+// Kriteria 2 (Basic & Skilled): Menampilkan notifikasi dinamis
 self.addEventListener("push", (event) => {
   console.log("Service Worker: Push Received.");
 
   let notificationData = {
-    title: "Notifikasi Baru!",
+    title: "StoryShare",
     options: {
-      body: "Ada konten baru untuk Anda.",
-      icon: "favicon.png",
-      image: "favicon.png", // Gambar besar (opsional)
+      body: "Ada cerita baru yang diunggah!",
+      icon: "favicon.png", // Ikon default
       data: {
-        url: "#/", // URL default jika tidak ada data
+        url: "#/", // URL default
       },
     },
   };
 
   try {
-    // Coba parse data payload dari server
+    // Kriteria 2 (Skilled): Membaca data dinamis dari payload
     const payload = event.data.json();
-    notificationData.title = payload.title || "Notifikasi Baru!";
-    notificationData.options.body =
-      payload.body || "Ada konten baru untuk Anda.";
+    notificationData.title = payload.title || "StoryShare";
+    notificationData.options.body = payload.body || "Ada cerita baru!";
     notificationData.options.icon = payload.icon || "favicon.png";
-    notificationData.options.image = payload.image;
-    notificationData.options.data.url = payload.data.url || "#/";
+    notificationData.options.data.url = payload.url || "#/";
   } catch (e) {
     console.warn(
-      "Push event data is not JSON, using default.",
+      "Push event payload is not JSON, using default.",
       event.data.text()
     );
   }
@@ -58,30 +51,40 @@ self.addEventListener("push", (event) => {
   );
 });
 
-// Kriteria 2: Advanced (Menangani klik pada notifikasi)
+// Kriteria 2 (Advanced): Menambahkan action klik
 self.addEventListener("notificationclick", (event) => {
   console.log("Service Worker: Notification clicked.");
 
   const notification = event.notification;
   const urlToOpen = notification.data.url || "#/";
 
-  // Tutup notifikasi
+  // Tutup notifikasi setelah di-klik
   notification.close();
 
   // Buka tab/jendela baru ke URL yang ditentukan
   event.waitUntil(
-    clients.matchAll({ type: "window" }).then((clientsArr) => {
-      const hadClient = clientsArr.some((client) => {
-        return client.url === urlToOpen && "focus" in client;
-      });
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientsArr) => {
+        // Cek apakah tab dengan URL yang sama sudah terbuka
+        const hadClient = clientsArr.some((client) => {
+          return new URL(client.url).hash === urlToOpen && "focus" in client;
+        });
 
-      if (hadClient) {
-        // Jika tab sudah terbuka, fokus ke tab itu
-        clientsArr[0].focus();
-      } else {
-        // Jika tidak, buka tab baru
-        clients.openWindow(urlToOpen);
-      }
-    })
+        if (hadClient) {
+          // Jika tab sudah terbuka, fokus ke tab itu
+          const existingClient = clientsArr.find(
+            (client) => new URL(client.url).hash === urlToOpen
+          );
+          if (existingClient) {
+            existingClient.focus();
+          } else {
+            clients.openWindow(urlToOpen);
+          }
+        } else {
+          // Jika tidak, buka tab baru
+          clients.openWindow(urlToOpen);
+        }
+      })
   );
 });

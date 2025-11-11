@@ -4,8 +4,8 @@
   "description": "Aplikasi berbagi cerita dan pengalaman seputar Dicoding",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0d1117",
-  "theme_color": "#161b22",
+  "background_color": "#2E273D",
+  "theme_color": "#3E3550",
   "icons": [
     {
       "src": "favicon.png",

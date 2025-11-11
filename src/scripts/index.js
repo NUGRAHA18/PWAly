@@ -1,7 +1,9 @@
+import "sweetalert2/dist/sweetalert2.min.css";
 import "../styles/styles.css";
 import App from "./pages/app";
 import ThemeHandler from "./utils/theme-handler";
 import "sweetalert2/dist/sweetalert2.min.css";
+import PushNotificationHelper from "./utils/push-notification-helper";
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -17,6 +19,13 @@ const registerServiceWorker = async () => {
     console.log("Service Worker not supported in this browser.");
   }
 };
+
+const notificationToggle = document.getElementById("notification-toggle");
+if (notificationToggle) {
+  notificationToggle.addEventListener("click", () => {
+    PushNotificationHelper.handleSubscriptionToggle();
+  });
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
   const themeHandler = new ThemeHandler();
@@ -36,6 +45,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await app.renderPage();
   await registerServiceWorker();
+
   window.addEventListener("hashchange", async () => {
     if (document.startViewTransition) {
       document.startViewTransition(async () => {

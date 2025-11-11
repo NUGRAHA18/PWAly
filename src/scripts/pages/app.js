@@ -19,6 +19,10 @@ class App {
   }
 
   _setupDrawer() {
+    if (!this.#drawerButton || !this.#navigationDrawer) {
+      console.warn("Drawer elements not found, skipping drawer setup.");
+      return;
+    }
     this.#drawerButton.addEventListener("click", () => {
       const isOpen = this.#navigationDrawer.classList.toggle("open");
       this.#drawerButton.setAttribute("aria-expanded", isOpen);

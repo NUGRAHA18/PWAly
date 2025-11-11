@@ -18,45 +18,45 @@ const PushNotificationHelper = {
     try {
       const permissionResult = await Notification.requestPermission();
       if (permissionResult === "denied") {
-        console.error("Notification permission denied.");
         NotificationHelper.showError("Anda memblokir izin notifikasi.");
-        return;
+        return false;
       }
 
       if (permissionResult === "default") {
-        console.warn("Notification permission dismissed.");
-        return;
+        NotificationHelper.showError("Anda menutup kotak izin notifikasi.");
+        return false;
       }
 
       console.log("Notification permission granted.");
-      // Langsung subscribe setelah izin diberikan
-      await this.subscribePush();
+      return true;
     } catch (error) {
       console.error("Error asking permission:", error);
+      return false;
     }
   },
 
   async subscribePush() {
-    if (!("serviceWorker" in navigator)) {
-      console.error("Service Worker not supported in this browser.");
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      NotificationHelper.showError(
+        "Browser Anda tidak mendukung Push Notification."
+      );
       return;
     }
 
     try {
       const registration = await navigator.serviceWorker.ready;
-      const existingSubscription =
-        await registration.pushManager.getSubscription();
+      let subscription = await registration.pushManager.getSubscription();
 
-      if (existingSubscription) {
-        console.log("User is already subscribed.");
+      if (subscription) {
         NotificationHelper.showSuccess("Anda sudah berlangganan notifikasi.");
+        console.log("User is already subscribed.");
         return;
       }
 
       const vapidPublicKey = CONFIG.PUSH_NOTIFICATION_VAPID_PUBLIC_KEY;
       if (
         !vapidPublicKey ||
-        vapidPublicKey === "MASUKKAN_PUBLIC_KEY_ANDA_DI_SINI"
+        vapidPublicKey === "MASUKKAN_VAPID_PUBLIC_KEY_DARI_DICODING_DI_SINI"
       ) {
         console.error("VAPID Public Key not set in config.js");
         NotificationHelper.showError(
@@ -67,21 +67,29 @@ const PushNotificationHelper = {
 
       const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
 
-      const subscription = await registration.pushManager.subscribe({
+      console.log("Subscribing user...");
+      subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: convertedVapidKey,
       });
 
       console.log("User subscribed:", subscription);
       NotificationHelper.showSuccess("Berhasil berlangganan notifikasi!");
-
-      // PENTING: Kirim 'subscription' (JSON) ini ke backend Anda untuk disimpan
-      // await YourApi.saveSubscription(subscription);
     } catch (error) {
       console.error("Failed to subscribe:", error);
       NotificationHelper.showError(`Gagal berlangganan: ${error.message}`);
     }
   },
+
+  // --- TAMBAHKAN FUNGSI INI ---
+  // Fungsi ini yang dipanggil oleh tombol di header
+  async handleSubscriptionToggle() {
+    const permissionGranted = await this.askPermission();
+    if (permissionGranted) {
+      await this.subscribePush();
+    }
+  },
+  // --- BATAS PENAMBAHAN ---
 };
 
 export default PushNotificationHelper;

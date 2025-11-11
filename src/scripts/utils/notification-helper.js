@@ -7,9 +7,10 @@ const NotificationHelper = {
       icon: "success",
       title: "Success!",
       text: message,
-      // Ini akan mengambil warna dari CSS variables Anda
       background: "var(--bg-card)",
       color: "var(--text-primary)",
+      timer: 1500, // Menutup otomatis setelah 1.5 detik
+      showConfirmButton: false,
     });
   },
 
@@ -41,18 +42,6 @@ const NotificationHelper = {
   // Untuk menggantikan hideLoading()
   hideLoading() {
     Swal.close();
-  },
-
-  showSuccess(message) {
-    Swal.fire({
-      icon: "success",
-      title: "Success!",
-      text: message,
-      background: "var(--bg-card)",
-      color: "var(--text-primary)",
-      timer: 1500, // Tambahkan timer (dalam milidetik)
-      showConfirmButton: false, // Sembunyikan tombol OK
-    });
   },
 };
 
