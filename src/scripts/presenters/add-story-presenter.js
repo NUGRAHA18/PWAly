@@ -13,9 +13,7 @@ class AddStoryPresenter {
 
     if (result.success) {
       this.view.showSuccess(result.message || "Story added successfully!");
-      setTimeout(() => {
-        window.location.hash = "#/";
-      }, 1500);
+      window.location.hash = "#/";
     } else {
       this.view.showError(result.message || "Failed to add story.");
     }

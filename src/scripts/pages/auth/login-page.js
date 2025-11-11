@@ -1,6 +1,7 @@
 import AuthPresenter from "../../presenters/auth-presenter";
 import authGuard from "../../utils/auth-guard";
 import { validators } from "../../utils/validators";
+import NotificationHelper from "../../utils/notification-helper";
 
 export default class LoginPage {
   constructor() {
@@ -17,9 +18,6 @@ export default class LoginPage {
             <h1 class="auth-title">Welcome Back</h1>
             <p class="auth-subtitle">Login to continue sharing your stories</p>
           </div>
-
-          <div id="alert-container"></div>
-
           <form id="login-form" class="auth-form">
             <div class="form-group">
               <label for="email" class="form-label">Email Address</label>
@@ -158,43 +156,24 @@ export default class LoginPage {
 
   showLoading() {
     const button = document.getElementById("login-button");
-    const buttonText = document.getElementById("button-text");
-    const spinner = document.getElementById("button-spinner");
-
     if (button) button.disabled = true;
-    if (buttonText) buttonText.style.display = "none";
-    if (spinner) spinner.style.display = "inline-block";
+
+    NotificationHelper.showLoading();
   }
 
   hideLoading() {
     const button = document.getElementById("login-button");
-    const buttonText = document.getElementById("button-text");
-    const spinner = document.getElementById("button-spinner");
-
     if (button) button.disabled = false;
-    if (buttonText) buttonText.style.display = "inline";
-    if (spinner) spinner.style.display = "none";
+
+    // GANTI BAGIAN SPINNER TOMBOL DENGAN INI:
+    NotificationHelper.hideLoading();
   }
 
   showSuccess(message) {
-    const container = document.getElementById("alert-container");
-    if (container) {
-      container.innerHTML = `
-        <div class="alert alert-success">
-          ✅ ${message}
-        </div>
-      `;
-    }
+    NotificationHelper.showSuccess(message);
   }
 
   showError(message) {
-    const container = document.getElementById("alert-container");
-    if (container) {
-      container.innerHTML = `
-        <div class="alert alert-error">
-          ❌ ${message}
-        </div>
-      `;
-    }
+    NotificationHelper.showError(message);
   }
 }

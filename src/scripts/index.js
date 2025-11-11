@@ -1,6 +1,7 @@
 import "../styles/styles.css";
 import App from "./pages/app";
 import ThemeHandler from "./utils/theme-handler";
+import "sweetalert2/dist/sweetalert2.min.css";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const themeHandler = new ThemeHandler();

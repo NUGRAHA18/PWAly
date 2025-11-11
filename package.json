@@ -27,7 +27,8 @@
   },
   "main": "webpack.common.js",
   "dependencies": {
-    "leaflet": "^1.9.4"
+    "leaflet": "^1.9.4",
+    "sweetalert2": "^11.26.3"
   },
   "repository": {
     "type": "git",

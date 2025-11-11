@@ -1,7 +1,7 @@
 import AuthPresenter from "../../presenters/auth-presenter";
 import authGuard from "../../utils/auth-guard";
 import { validators } from "../../utils/validators";
-
+import NotificationHelper from "../../utils/notification-helper";
 export default class RegisterPage {
   constructor() {
     this.presenter = new AuthPresenter(this);
@@ -229,43 +229,23 @@ export default class RegisterPage {
 
   showLoading() {
     const button = document.getElementById("register-button");
-    const buttonText = document.getElementById("button-text");
-    const spinner = document.getElementById("button-spinner");
-
     if (button) button.disabled = true;
-    if (buttonText) buttonText.style.display = "none";
-    if (spinner) spinner.style.display = "inline-block";
+
+    NotificationHelper.showLoading();
   }
 
   hideLoading() {
     const button = document.getElementById("register-button");
-    const buttonText = document.getElementById("button-text");
-    const spinner = document.getElementById("button-spinner");
-
     if (button) button.disabled = false;
-    if (buttonText) buttonText.style.display = "inline";
-    if (spinner) spinner.style.display = "none";
+
+    NotificationHelper.hideLoading();
   }
 
   showSuccess(message) {
-    const container = document.getElementById("alert-container");
-    if (container) {
-      container.innerHTML = `
-        <div class="alert alert-success">
-          ✅ ${message}
-        </div>
-      `;
-    }
+    NotificationHelper.showSuccess(message);
   }
 
   showError(message) {
-    const container = document.getElementById("alert-container");
-    if (container) {
-      container.innerHTML = `
-        <div class="alert alert-error">
-          ❌ ${message}
-        </div>
-      `;
-    }
+    NotificationHelper.showError(message);
   }
 }

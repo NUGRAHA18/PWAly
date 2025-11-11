@@ -3,6 +3,7 @@ import AddStoryPresenter from "../../presenters/add-story-presenter";
 import { validators } from "../../utils/validators";
 import MapHandler from "../../utils/map-handler";
 import CameraHandler from "../../utils/camera-handler";
+import NotificationHelper from "../../utils/notification-helper";
 
 export default class AddStoryPage {
   constructor() {
@@ -23,8 +24,6 @@ export default class AddStoryPage {
           <h1 class="add-story-title">Create New Story</h1>
           <p class="add-story-subtitle">Share your moments with the community</p>
         </div>
-
-        <div id="alert-container"></div>
 
         <form id="add-story-form" class="add-story-form">
           <div class="form-section">
@@ -436,38 +435,22 @@ export default class AddStoryPage {
 
   showLoading() {
     const button = document.getElementById("submit-button");
-    const buttonText = document.getElementById("button-text");
-    const spinner = document.getElementById("button-spinner");
-
     if (button) button.disabled = true;
-    if (buttonText) buttonText.style.display = "none";
-    if (spinner) spinner.style.display = "inline-block";
+    NotificationHelper.showLoading();
   }
 
   hideLoading() {
     const button = document.getElementById("submit-button");
-    const buttonText = document.getElementById("button-text");
-    const spinner = document.getElementById("button-spinner");
-
     if (button) button.disabled = false;
-    if (buttonText) buttonText.style.display = "inline";
-    if (spinner) spinner.style.display = "none";
+    NotificationHelper.hideLoading();
   }
 
   showSuccess(message) {
-    const container = document.getElementById("alert-container");
-    if (container) {
-      container.innerHTML = `<div class="alert alert-success">✅ ${message}</div>`;
-      window.scrollTo(0, 0);
-    }
+    NotificationHelper.showSuccess(message);
   }
 
   showError(message) {
-    const container = document.getElementById("alert-container");
-    if (container) {
-      container.innerHTML = `<div class="alert alert-error">❌ ${message}</div>`;
-      window.scrollTo(0, 0);
-    }
+    NotificationHelper.showError(message);
   }
 
   async destroy() {
