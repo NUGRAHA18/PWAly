@@ -10,10 +10,19 @@ class AddStoryPresenter {
   // 2. handleAddStory sekarang menerima 'storyData' (object)
   async handleAddStory(storyData) {
     this.view.showLoading();
+    const storyId = new Date().toISOString();
+    storyData.id = storyId;
 
     try {
       // 3. Buat FormData di dalam presenter
+      await DatabaseHelper.putOutboxStory(storyData); // Gunakan fungsi outbox
+
+      this.view.showSuccess(
+        "Anda sedang offline. Cerita disimpan & akan diunggah otomatis saat Anda kembali online."
+      );
+      // ...
       const formData = new FormData();
+      formData.append("id", storyData.id);
       formData.append("description", storyData.description);
       formData.append("photo", storyData.photo, storyData.photo.name);
 
@@ -28,6 +37,7 @@ class AddStoryPresenter {
       this.view.hideLoading();
 
       if (result.success) {
+        await DatabaseHelper.deleteStory(storyId);
         this.view.showSuccess(result.message || "Story added successfully!");
         setTimeout(() => {
           window.location.hash = "#/";
@@ -37,25 +47,17 @@ class AddStoryPresenter {
         this.view.showError(result.message || "Failed to add story.");
       }
     } catch (error) {
-      // 5. (OFFLINE PATH) Error 'fetch' dari repository akan ditangkap di sini
+      // 5. (OFFLINE PATH) Error 'fetch' akan ditangkap di sini
       this.view.hideLoading();
-      console.warn("Failed to send story online, saving to outbox...", error);
+      console.warn("Failed to send story (offline), saved to outbox.", error);
 
-      try {
-        // Simpan data mentah ke IndexedDB
-        await DatabaseHelper.putStory(storyData);
-        this.view.showSuccess(
-          "Cerita disimpan! Akan diunggah otomatis saat Anda kembali online."
-        );
-        setTimeout(() => {
-          window.location.hash = "#/";
-        }, 2000);
-      } catch (dbError) {
-        console.error("Failed to save story to outbox:", dbError);
-        this.view.showError(
-          "Gagal mengirim cerita dan gagal menyimpan ke offline storage."
-        );
-      }
+      // Data sudah ada di IndexedDB, Workbox (BackgroundSync) akan mengambil alih
+      this.view.showSuccess(
+        "Anda sedang offline. Cerita disimpan & akan diunggah otomatis saat Anda kembali online."
+      );
+      setTimeout(() => {
+        window.location.hash = "#/";
+      }, 2000);
     }
   }
 }

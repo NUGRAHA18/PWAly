@@ -788,3 +788,40 @@ footer p {
 html::view-transition {
     pointer-events: none;
 }
+
+.story-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-primary);
+}
+
+.story-card-location {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.btn-favorite {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.btn-favorite:hover {
+    color: var(--text-link);
+    background-color: var(--bg-hover);
+}
+
+/* Style saat tombol aktif (disimpan) */
+.btn-favorite.favorited {
+    color: var(--bg-accent);
+    fill: var(--bg-accent);
+}

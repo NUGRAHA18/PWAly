@@ -42,7 +42,6 @@ class AuthPresenter {
   handleLogout() {
     authModel.logout();
     window.location.hash = "#/login";
-    window.location.reload();
   }
 
   isAuthenticated() {

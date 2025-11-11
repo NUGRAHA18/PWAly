@@ -6,6 +6,9 @@ import { registerRoute } from "workbox-routing";
 import { StaleWhileRevalidate, CacheFirst } from "workbox-strategies";
 import { ExpirationPlugin } from "workbox-expiration";
 import { clientsClaim } from "workbox-core";
+import { BackgroundSyncPlugin } from "workbox-background-sync";
+import DatabaseHelper from "./scripts/utils/database-helper"; // Impor DB Helper
+import authRepository from "./scripts/data/auth-repository"; // Impor Auth
 
 // --- 2. Konfigurasi dasar Service Worker ---
 self.skipWaiting();
@@ -48,10 +51,7 @@ registerRoute(
   new StaleWhileRevalidate({
     cacheName: "dicoding-api-stories",
     plugins: [
-      new ExpirationPlugin({
-        maxEntries: 50,
-        maxAgeSeconds: 60 * 60 * 24, // 1 hari
-      }),
+      new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 }),
     ],
   })
 );
@@ -60,15 +60,56 @@ registerRoute(
 registerRoute(
   ({ request }) =>
     request.destination === "image" &&
-    request.url.includes("story-api.dicoding.dev"), // Ini benar menggunakan URL eksternal
+    request.url.includes("story-api.dicoding.dev"),
   new CacheFirst({
     cacheName: "dicoding-api-images",
     plugins: [
       new ExpirationPlugin({
         maxEntries: 100,
-        maxAgeSeconds: 60 * 60 * 24 * 30, // 30 hari
+        maxAgeSeconds: 60 * 60 * 24 * 30,
       }),
     ],
+  })
+);
+
+const bgSyncPlugin = new BackgroundSyncPlugin("story-outbox-queue", {
+  maxRetentionTime: 24 * 60, // Coba lagi selama 24 jam
+  onSync: async ({ queue }) => {
+    console.log("Service Worker: Background Sync started...");
+    let entry;
+    while ((entry = await queue.shiftRequest())) {
+      try {
+        const response = await fetch(entry.request);
+        console.log("Service Worker: Synced story:", entry.request.url);
+
+        // Setelah berhasil sync, kita HAPUS dari IndexedDB
+        // Kita ambil ID dari FormData (ini agak rumit)
+        const formData = await entry.request.formData();
+        const id = formData.get("id"); // Kita perlu menambahkan ID ke FormData
+        if (id) {
+          await DatabaseHelper.deleteOutboxStory(id); // Gunakan fungsi outbox
+          console.log("Service Worker: Removed story from outbox:", id);
+        }
+      } catch (error) {
+        console.error(
+          "Service Worker: Failed to sync story:",
+          entry.request.url,
+          error
+        );
+        // Kembalikan ke antrian untuk dicoba lagi nanti
+        await queue.unshiftRequest(entry);
+        throw error; // Lempar error agar onSync tahu ini gagal
+      }
+    }
+  },
+});
+registerRoute(
+  ({ url }) =>
+    url.origin === self.origin &&
+    url.pathname.startsWith("/v1/stories") &&
+    url.method === "POST",
+  new NetworkOnly({
+    plugins: [bgSyncPlugin],
   })
 );
 

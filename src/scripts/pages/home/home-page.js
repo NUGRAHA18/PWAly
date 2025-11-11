@@ -3,6 +3,8 @@ import HomePresenter from "../../presenters/home-presenter";
 import StoryList from "../../components/story-list";
 import LoadingSpinner from "../../components/loading-spinner";
 import MapHandler from "../../utils/map-handler";
+import DatabaseHelper from "../../utils/database-helper";
+import NotificationHelper from "../../utils/notification-helper";
 
 export default class HomePage {
   constructor() {
@@ -58,6 +60,8 @@ export default class HomePage {
 
     // Panggil fungsi yang sudah diperbarui
     this._setupCardInteractionEvents();
+    this._setupFavoriteButtonListeners();
+    this._setupScrollListener();
   }
 
   showLoading() {
@@ -78,6 +82,8 @@ export default class HomePage {
     if (container) {
       container.innerHTML = StoryList.render(stories);
     }
+    this._setupCardInteractionEvents();
+    this._setupFavoriteButtonListeners();
 
     const countElement = document.getElementById("stories-count");
     if (countElement) {
@@ -232,5 +238,68 @@ export default class HomePage {
       this.mapHandler = null;
       console.log("HomePage destroyed, map handler cleaned up.");
     }
+  }
+  async _setupFavoriteButtonListeners() {
+    const container = document.getElementById("stories-container");
+    if (!container) return;
+
+    // 1. Dapatkan daftar ID favorit dari IndexedDB
+    const favoriteStories = await DatabaseHelper.getAllFavoriteStories();
+    const favoriteIds = favoriteStories.map((story) => story.id);
+
+    const buttons = container.querySelectorAll(".btn-favorite");
+    buttons.forEach((button) => {
+      const storyId = button.dataset.storyId;
+
+      // 2. Tandai tombol yang sudah difavoritkan
+      if (favoriteIds.includes(storyId)) {
+        button.classList.add("favorited");
+        button.setAttribute(
+          "aria-label",
+          `Hapus cerita ${storyId} dari favorit`
+        );
+      } else {
+        button.classList.remove("favorited");
+        button.setAttribute(
+          "aria-label",
+          `Simpan cerita ${storyId} ke favorit`
+        );
+      }
+
+      // 3. Tambahkan event listener
+      button.addEventListener("click", async (event) => {
+        event.stopPropagation(); // Hentikan event agar tidak memicu highlight peta
+
+        const isFavorited = button.classList.contains("favorited");
+
+        if (isFavorited) {
+          // --- LOGIKA DELETE ---
+          await DatabaseHelper.deleteFavoriteStory(storyId);
+          button.classList.remove("favorited");
+          button.setAttribute(
+            "aria-label",
+            `Simpan cerita ${storyId} ke favorit`
+          );
+          NotificationHelper.showSuccess("Cerita dihapus dari favorit");
+        } else {
+          // --- LOGIKA CREATE ---
+          // Temukan data cerita lengkap dari 'this.stories'
+          const storyData = this.stories.find((story) => story.id === storyId);
+          if (storyData) {
+            await DatabaseHelper.putFavoriteStory(storyData);
+            button.classList.add("favorited");
+            button.setAttribute(
+              "aria-label",
+              `Hapus cerita ${storyId} dari favorit`
+            );
+            NotificationHelper.showSuccess("Cerita disimpan ke favorit");
+          } else {
+            NotificationHelper.showError(
+              "Gagal menemukan data cerita untuk disimpan."
+            );
+          }
+        }
+      });
+    });
   }
 }
