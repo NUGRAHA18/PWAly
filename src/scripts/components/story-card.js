@@ -4,15 +4,19 @@ class StoryCard {
   static render(story) {
     const hasLocation = story.lat && story.lon;
 
+    // --- PERUBAHAN DI SINI: dari <article> menjadi <a> ---
     return `
-      <article
+      <a
         class="story-card"
+        href="#/story/${story.id}"
         data-story-id="${story.id}"
         data-lat="${story.lat || ""}"
         data-lon="${story.lon || ""}"
-        tabindex="0"  aria-label="Story by ${
-          story.name
-        }: ${story.description.substring(0, 50)}..." >
+        aria-label="Story by ${story.name}: ${story.description.substring(
+      0,
+      50
+    )}... Klik untuk melihat detail."
+      >
         <img
           src="${story.photoUrl}"
           alt="${story.description}"
@@ -50,8 +54,9 @@ class StoryCard {
           </div>
 
         </div>
-      </article>
+      </a>
     `;
+    // --- AKHIR PERUBAHAN ---
   }
 }
 

@@ -1,7 +1,7 @@
 import authGuard from "../../utils/auth-guard";
 import HomePresenter from "../../presenters/home-presenter";
 import StoryList from "../../components/story-list";
-import LoadingSpinner from "../../components/loading-spinner";
+import StoryListSkeleton from "../../components/story-list-skeleton";
 import MapHandler from "../../utils/map-handler";
 import DatabaseHelper from "../../utils/database-helper";
 import NotificationHelper from "../../utils/notification-helper";
@@ -67,7 +67,7 @@ export default class HomePage {
   showLoading() {
     const container = document.getElementById("stories-container");
     if (container) {
-      container.innerHTML = LoadingSpinner.render();
+      container.innerHTML = StoryListSkeleton.render(6); // Tampilkan 6 skeleton
     }
   }
 
@@ -140,32 +140,10 @@ export default class HomePage {
       const lat = card.dataset.lat;
       const lon = card.dataset.lon;
 
-      // Fungsi untuk memicu highlight marker di peta
-      const triggerHighlight = () => {
-        if (this.mapHandler && storyId && lat && lon) {
-          // Hanya highlight jika ada lokasi
-          this.mapHandler.highlightMarker(storyId);
-        } else {
-          console.log(`Story card ${storyId} activated, but has no location.`);
-          // Aksi opsional lain jika tidak ada lokasi
-        }
-      };
-
       // Listener untuk mouse hover (jika masih diinginkan)
       card.addEventListener("mouseenter", () => {
         if (this.mapHandler && storyId && lat && lon) {
           this.mapHandler.highlightMarker(storyId);
-        }
-      });
-
-      // Listener untuk klik mouse
-      card.addEventListener("click", triggerHighlight);
-
-      // Listener untuk keyboard (Enter atau Spasi)
-      card.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault(); // Mencegah scroll saat menekan spasi
-          triggerHighlight();
         }
       });
     });
@@ -280,7 +258,7 @@ export default class HomePage {
             "aria-label",
             `Simpan cerita ${storyId} ke favorit`
           );
-          NotificationHelper.showSuccess("Cerita dihapus dari favorit");
+          NotificationHelper.showToast("Cerita dihapus dari favorit", "info");
         } else {
           // --- LOGIKA CREATE ---
           // Temukan data cerita lengkap dari 'this.stories'
@@ -292,7 +270,7 @@ export default class HomePage {
               "aria-label",
               `Hapus cerita ${storyId} dari favorit`
             );
-            NotificationHelper.showSuccess("Cerita disimpan ke favorit");
+            NotificationHelper.showToast("Cerita disimpan ke favorit");
           } else {
             NotificationHelper.showError(
               "Gagal menemukan data cerita untuk disimpan."

@@ -22,7 +22,8 @@ module.exports = merge(common, {
       },
     },
 
-    // --- TAMBAHKAN BLOK PROXY YANG HILANG INI ---
+    // --- PERBAIKAN DIMULAI DI SINI ---
+    // Menambahkan blok proxy yang hilang
     proxy: [
       {
         context: ["/register", "/login", "/v1"], // Tangkap semua path API
@@ -30,6 +31,6 @@ module.exports = merge(common, {
         changeOrigin: true,
       },
     ],
-    // --- BATAS PENAMBAHAN ---
+    // --- PERBAIKAN SELESAI ---
   },
 });

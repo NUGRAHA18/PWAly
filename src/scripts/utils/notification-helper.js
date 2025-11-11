@@ -1,6 +1,26 @@
 import Swal from "sweetalert2";
 
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  background: "var(--bg-card)", // Ambil warna dari CSS
+  color: "var(--text-primary)", // Ambil warna dari CSS
+  didOpen: (toast) => {
+    toast.addEventListener("mouseenter", Swal.stopTimer);
+    toast.addEventListener("mouseleave", Swal.resumeTimer);
+  },
+});
+
 const NotificationHelper = {
+  showToast(message, icon = "success") {
+    Toast.fire({
+      icon: icon,
+      title: message,
+    });
+  },
   // Untuk menggantikan showSuccess()
   showSuccess(message) {
     Swal.fire({

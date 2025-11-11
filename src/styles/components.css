@@ -805,6 +805,12 @@ html::view-transition {
     gap: var(--spacing-xs);
 }
 
+a.story-card,
+a.story-card:hover {
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
 .btn-favorite {
     background: none;
     border: none;
@@ -824,4 +830,59 @@ html::view-transition {
 .btn-favorite.favorited {
     color: var(--bg-accent);
     fill: var(--bg-accent);
+}
+
+.skeleton-card {
+    pointer-events: none;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-primary);
+}
+
+.skeleton {
+    background-color: var(--bg-tertiary);
+    opacity: 0.6;
+    border-radius: var(--radius-md);
+    animation: shimmer 1.5s infinite linear;
+}
+
+.skeleton-image {
+    width: 100%;
+    height: 200px;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.skeleton-line {
+    height: 16px;
+    margin-bottom: var(--spacing-sm);
+}
+
+.skeleton-line-title {
+    width: 50%;
+    height: 20px;
+    margin-bottom: var(--spacing-lg);
+}
+
+.skeleton-line-text {
+    width: 100%;
+}
+
+.skeleton-line-text-short {
+    width: 75%;
+}
+
+/* Animasi shimmer */
+@keyframes shimmer {
+    0% {
+        background-position: -468px 0;
+    }
+
+    100% {
+        background-position: 468px 0;
+    }
+}
+
+/* Penyesuaian untuk kartu skeleton agar pas dengan grid */
+.skeleton-card .story-card-content {
+    padding: var(--spacing-lg);
 }

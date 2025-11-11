@@ -1,8 +1,8 @@
 // --- SEMUA PATH DI BAWAH INI SUDAH DIPERBAIKI (../../) ---
 import DatabaseHelper from "../../utils/database-helper";
 import StoryList from "../../components/story-list";
-import LoadingSpinner from "../../components/loading-spinner";
 import authGuard from "../../utils/auth-guard";
+import StoryListSkeleton from "../../components/story-list-skeleton";
 import NotificationHelper from "../../utils/notification-helper";
 
 export default class FavoritePage {
@@ -15,25 +15,13 @@ export default class FavoritePage {
 
     return `
       <section class="container" id="favorite-page-container"> 
-        <div class="home-hero">
-          <h1>Cerita Favorit Anda</h1>
-          <p>Cerita yang Anda simpan akan muncul di sini.</p>
-        </div>
-
-        <div class="stories-controls mb-xl">
-          <div class="form-group" style="width: 100%;">
-            <label for="search-favorite" class="form-label">Cari Favorit</label>
-            <input
-              type="search"
-              id="search-favorite"
-              class="form-input"
-              placeholder="Cari berdasarkan nama atau deskripsi..."
-            />
-          </div>
-        </div>
-
         <div id="stories-container">
-          ${LoadingSpinner.render()}
+          ${StoryListSkeleton.render(6)}
+        </div>
+
+        <!-- optional: input search -->
+        <div class="search-wrapper">
+          <input id="search-favorite" placeholder="Cari favorit..." />
         </div>
       </section>
     `;
@@ -45,34 +33,45 @@ export default class FavoritePage {
     // Ambil data dari IndexedDB
     await this._loadFavoriteStories();
 
-    // Kriteria 4 (Skilled): Tambahkan event listener untuk search
+    // Kriteria 4 (Skilled): Tambahkan event listener untuk search (cek null)
     const searchInput = document.getElementById("search-favorite");
-    searchInput.addEventListener("input", (event) => {
-      this._performSearch(event.target.value);
-    });
+    if (searchInput) {
+      searchInput.addEventListener("input", (event) => {
+        this._performSearch(event.target.value || "");
+      });
+    }
   }
 
   async _loadFavoriteStories() {
-    const stories = await DatabaseHelper.getAllFavoriteStories();
-    this._stories = stories;
-    this._renderStories(stories);
-    this._setupFavoriteButtonListeners(); // Panggil listener setelah render
+    try {
+      const stories = await DatabaseHelper.getAllFavoriteStories();
+      this._stories = Array.isArray(stories) ? stories : [];
+      this._renderStories(this._stories);
+      this._setupFavoriteButtonListeners(); // Panggil listener setelah render
+    } catch (err) {
+      console.error("Gagal memuat cerita favorit:", err);
+      NotificationHelper.showToast("Gagal memuat cerita favorit", "error");
+      this._stories = [];
+      this._renderStories([]);
+    }
   }
 
-  _performSearch(keyword) {
-    const lowerKeyword = keyword.toLowerCase();
-    const filteredStories = this._stories.filter(
-      (story) =>
-        story.name.toLowerCase().includes(lowerKeyword) ||
-        story.description.toLowerCase().includes(lowerKeyword)
-    );
+  _performSearch(keyword = "") {
+    const lowerKeyword = String(keyword).toLowerCase();
+    const filteredStories = this._stories.filter((story) => {
+      const name = (story.name || "").toLowerCase();
+      const desc = (story.description || "").toLowerCase();
+      return name.includes(lowerKeyword) || desc.includes(lowerKeyword);
+    });
     this._renderStories(filteredStories);
     this._setupFavoriteButtonListeners(); // Panggil listener setelah render (filter)
   }
 
   _renderStories(stories) {
     const container = document.getElementById("stories-container");
-    if (stories.length > 0) {
+    if (!container) return;
+
+    if (Array.isArray(stories) && stories.length > 0) {
       container.innerHTML = StoryList.render(stories);
     } else {
       container.innerHTML = `
@@ -100,19 +99,29 @@ export default class FavoritePage {
     buttons.forEach((button) => {
       // Tandai semua sebagai sudah difavoritkan
       button.classList.add("favorited");
-      button.setAttribute("aria-label", `Hapus cerita dari favorit`);
+      button.setAttribute("aria-label", "Hapus cerita dari favorit");
 
       button.addEventListener("click", async (event) => {
         event.stopPropagation();
+        const btn = event.currentTarget;
+        const storyId = btn.dataset.storyId;
 
-        const storyId = button.dataset.storyId;
+        if (!storyId) {
+          console.warn("storyId tidak ditemukan pada tombol favorit");
+          return;
+        }
 
-        // --- LOGIKA DELETE ---
-        await DatabaseHelper.deleteFavoriteStory(storyId);
-        NotificationHelper.showSuccess("Cerita dihapus dari favorit");
+        try {
+          // --- LOGIKA DELETE ---
+          await DatabaseHelper.deleteFavoriteStory(storyId);
+          NotificationHelper.showToast("Cerita dihapus dari favorit", "info");
 
-        // Muat ulang daftar cerita setelah dihapus
-        this._loadFavoriteStories();
+          // Muat ulang daftar cerita setelah dihapus (tunggu sampai selesai)
+          await this._loadFavoriteStories();
+        } catch (err) {
+          console.error("Gagal menghapus favorit:", err);
+          NotificationHelper.showToast("Gagal menghapus favorit", "error");
+        }
       });
     });
   }
