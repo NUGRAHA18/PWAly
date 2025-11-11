@@ -37,7 +37,7 @@ class AddStoryPresenter {
       this.view.hideLoading();
 
       if (result.success) {
-        await DatabaseHelper.deleteStory(storyId);
+        await DatabaseHelper.deleteOutboxStory(storyId);
         this.view.showSuccess(result.message || "Story added successfully!");
         setTimeout(() => {
           window.location.hash = "#/";

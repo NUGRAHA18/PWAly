@@ -5,6 +5,7 @@ import StoryListSkeleton from "../../components/story-list-skeleton";
 import MapHandler from "../../utils/map-handler";
 import DatabaseHelper from "../../utils/database-helper";
 import NotificationHelper from "../../utils/notification-helper";
+import LoadingSpinner from "../../components/loading-spinner";
 
 export default class HomePage {
   constructor() {
