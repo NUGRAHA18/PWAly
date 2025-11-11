@@ -1,8 +1,11 @@
+// src/scripts/index.js
+
 import "sweetalert2/dist/sweetalert2.min.css";
 import "../styles/styles.css";
 import App from "./pages/app";
 import ThemeHandler from "./utils/theme-handler";
 import PushNotificationHelper from "./utils/push-notification-helper";
+import DatabaseHelper from "./utils/database-helper"; // ✅ Import helper
 
 // Fungsi untuk mendaftarkan Service Worker
 const registerServiceWorker = async () => {
@@ -11,12 +14,38 @@ const registerServiceWorker = async () => {
       const registration = await navigator.serviceWorker.register(
         "./service-worker.js"
       );
-      console.log("Service Worker registered:", registration);
+      console.log("✅ Service Worker registered:", registration);
+
+      // ✅ TAMBAHAN: Listen untuk message dari Service Worker
+      navigator.serviceWorker.addEventListener("message", async (event) => {
+        console.log("📨 Pesan dari Service Worker:", event.data);
+
+        if (event.data && event.data.type === "SYNC_SUCCESS") {
+          // Hapus story dari outbox IndexedDB
+          const storyId = event.data.storyId;
+          if (storyId) {
+            try {
+              await DatabaseHelper.deleteOutboxStory(storyId);
+              console.log("🗑️ Story berhasil dihapus dari outbox:", storyId);
+
+              // Optional: Tampilkan notifikasi ke user
+              if (Notification.permission === "granted") {
+                new Notification("Cerita Berhasil Diunggah! 🎉", {
+                  body: "Cerita yang tersimpan sudah berhasil diunggah ke server.",
+                  icon: "favicon.png",
+                });
+              }
+            } catch (error) {
+              console.error("❌ Gagal hapus dari outbox:", error);
+            }
+          }
+        }
+      });
     } catch (error) {
-      console.error("Service Worker registration failed:", error);
+      console.error("❌ Service Worker registration failed:", error);
     }
   } else {
-    console.log("Service Worker not supported in this browser.");
+    console.log("⚠️ Service Worker not supported in this browser.");
   }
 };
 

@@ -247,15 +247,24 @@ export default class AddStoryPage {
       cameraError.style.display = "none";
       cameraError.textContent = "";
       this._updatePhotoUIState("camera");
+
       try {
         this._activeStream = await this._cameraHandler.startCamera(
           cameraPreview
         );
+        console.log("✅ Camera started successfully");
       } catch (error) {
-        console.error("Failed to start camera:", error);
-        cameraError.textContent = `❌ ${error.message}`;
+        console.error("❌ Failed to start camera:", error);
+
+        // Tampilkan error message yang user-friendly
+        cameraError.textContent = error.message;
         cameraError.style.display = "block";
+
+        // Kembali ke options view
         this._updatePhotoUIState("options");
+
+        // Optional: Tampilkan toast notification juga
+        // NotificationHelper.showToast(error.message, "error");
       }
     });
 

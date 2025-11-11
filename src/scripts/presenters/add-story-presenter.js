@@ -1,5 +1,7 @@
+// src/scripts/presenters/add-story-presenter.js
+
 import storyModel from "../models/story-model";
-import DatabaseHelper from "../utils/database-helper"; // <-- 1. IMPOR HELPER BARU
+import DatabaseHelper from "../utils/database-helper";
 
 class AddStoryPresenter {
   constructor(view) {
@@ -7,57 +9,72 @@ class AddStoryPresenter {
     this.storyModel = storyModel;
   }
 
-  // 2. handleAddStory sekarang menerima 'storyData' (object)
+  /**
+   * ✅ DIPERBAIKI: Logika offline yang benar
+   * 1. Buat FormData DULU (dengan ID)
+   * 2. Coba kirim ke API
+   * 3. Jika OFFLINE (error network), simpan ke outbox + IndexedDB
+   */
   async handleAddStory(storyData) {
     this.view.showLoading();
-    const storyId = new Date().toISOString();
+
+    // 1. Generate ID unik untuk cerita
+    const storyId = Date.now().toString(); // Gunakan timestamp sebagai ID
     storyData.id = storyId;
 
+    // 2. ✅ Buat FormData DULU (sebelum coba kirim)
+    const formData = new FormData();
+    formData.append("id", storyData.id); // ✅ ID ada di FormData untuk Background Sync
+    formData.append("description", storyData.description);
+    formData.append("photo", storyData.photo, storyData.photo.name);
+
+    // Tambahkan lokasi jika ada
+    if (storyData.lat && storyData.lon) {
+      formData.append("lat", storyData.lat);
+      formData.append("lon", storyData.lon);
+    }
+
     try {
-      // 3. Buat FormData di dalam presenter
-      await DatabaseHelper.putOutboxStory(storyData); // Gunakan fungsi outbox
-
-      this.view.showSuccess(
-        "Anda sedang offline. Cerita disimpan & akan diunggah otomatis saat Anda kembali online."
-      );
-      // ...
-      const formData = new FormData();
-      formData.append("id", storyData.id);
-      formData.append("description", storyData.description);
-      formData.append("photo", storyData.photo, storyData.photo.name);
-
-      if (storyData.lat && storyData.lon) {
-        formData.append("lat", storyData.lat);
-        formData.append("lon", storyData.lon);
-      }
-
-      // 4. (ONLINE PATH) Coba kirim ke API
+      // 3. ✅ Coba kirim ke API dulu (ONLINE PATH)
       const result = await this.storyModel.addStory(formData);
 
       this.view.hideLoading();
 
       if (result.success) {
-        await DatabaseHelper.deleteOutboxStory(storyId);
-        this.view.showSuccess(result.message || "Story added successfully!");
+        this.view.showSuccess(result.message || "Cerita berhasil ditambahkan!");
         setTimeout(() => {
           window.location.hash = "#/";
         }, 1500);
       } else {
-        // Ini adalah error API (misal: validasi gagal), BUKAN offline
-        this.view.showError(result.message || "Failed to add story.");
+        // Ini seharusnya tidak terjadi karena error sudah di-throw di repository
+        this.view.showError(result.message || "Gagal menambahkan cerita.");
       }
     } catch (error) {
-      // 5. (OFFLINE PATH) Error 'fetch' akan ditangkap di sini
+      // 4. ✅ OFFLINE PATH - Error akan ditangkap di sini
       this.view.hideLoading();
-      console.warn("Failed to send story (offline), saved to outbox.", error);
 
-      // Data sudah ada di IndexedDB, Workbox (BackgroundSync) akan mengambil alih
-      this.view.showSuccess(
-        "Anda sedang offline. Cerita disimpan & akan diunggah otomatis saat Anda kembali online."
-      );
-      setTimeout(() => {
-        window.location.hash = "#/";
-      }, 2000);
+      console.warn("📡 Offline mode detected:", error.message);
+
+      // Simpan data mentah ke IndexedDB (untuk favorit/display)
+      try {
+        await DatabaseHelper.putOutboxStory(storyData);
+
+        // ✅ Background Sync akan otomatis menangani pengiriman ulang
+        // karena request sudah masuk ke Workbox queue
+
+        this.view.showSuccess(
+          "Kamu sedang offline. Cerita akan otomatis diunggah saat online kembali! 📤"
+        );
+
+        setTimeout(() => {
+          window.location.hash = "#/";
+        }, 2000);
+      } catch (dbError) {
+        console.error("❌ Gagal menyimpan ke IndexedDB:", dbError);
+        this.view.showError(
+          "Gagal menyimpan cerita. Pastikan browser mendukung IndexedDB."
+        );
+      }
     }
   }
 }

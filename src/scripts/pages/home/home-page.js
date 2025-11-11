@@ -1,3 +1,6 @@
+// src/scripts/pages/home/home-page.js
+// ✅ UPDATE: Menambahkan click handler untuk navigasi story card
+
 import authGuard from "../../utils/auth-guard";
 import HomePresenter from "../../presenters/home-presenter";
 import StoryList from "../../components/story-list";
@@ -12,6 +15,7 @@ export default class HomePage {
     this.presenter = new HomePresenter(this);
     this.mapHandler = null;
     this.stories = [];
+    this._scrollListener = null;
   }
 
   async render() {
@@ -27,10 +31,9 @@ export default class HomePage {
         </div>
 
         <div class="stories-controls">
-       
+          <!-- Tempat untuk filter/sort jika diperlukan -->
         </div>
 
-        
         <div class="home-content">
           <div class="home-map"> 
             <div class="map-container">
@@ -54,12 +57,14 @@ export default class HomePage {
   async afterRender() {
     if (!authGuard.requireAuth()) return;
 
+    // 1. Inisialisasi map
     this.mapHandler = new MapHandler("map");
     this.mapHandler.init();
 
+    // 2. Load stories
     await this.presenter.loadStories({ location: 1 });
 
-    // Panggil fungsi yang sudah diperbarui
+    // 3. Setup semua event listeners
     this._setupCardInteractionEvents();
     this._setupFavoriteButtonListeners();
     this._setupScrollListener();
@@ -68,7 +73,7 @@ export default class HomePage {
   showLoading() {
     const container = document.getElementById("stories-container");
     if (container) {
-      container.innerHTML = StoryListSkeleton.render(6); // Tampilkan 6 skeleton
+      container.innerHTML = StoryListSkeleton.render(6);
     }
   }
 
@@ -83,15 +88,15 @@ export default class HomePage {
     if (container) {
       container.innerHTML = StoryList.render(stories);
     }
-    this._setupCardInteractionEvents();
-    this._setupFavoriteButtonListeners();
 
     const countElement = document.getElementById("stories-count");
     if (countElement) {
       countElement.textContent = `(${stories.length} cerita)`;
     }
-    // Panggil ulang setup interaksi setelah story dirender
+
+    // Setup ulang interaksi setelah story dirender
     this._setupCardInteractionEvents();
+    this._setupFavoriteButtonListeners();
   }
 
   displayMap(stories) {
@@ -126,25 +131,150 @@ export default class HomePage {
   }
 
   /**
-   * Mengatur event listener untuk interaksi mouse dan keyboard pada kartu cerita.
+   * ✅ UPDATE: Menambahkan click handler untuk navigasi
    */
   _setupCardInteractionEvents() {
-    // Nama fungsi diperbarui
-    // Gunakan event delegation jika memungkinkan, tapi untuk simplicity kita attach langsung
     const container = document.getElementById("stories-container");
-    if (!container) return; // Pastikan container ada
+    if (!container) return;
 
-    const cards = container.querySelectorAll(".story-card"); // Cari kartu di dalam container
+    const cards = container.querySelectorAll(".story-card");
 
     cards.forEach((card) => {
       const storyId = card.dataset.storyId;
       const lat = card.dataset.lat;
       const lon = card.dataset.lon;
+      const href = card.dataset.href;
 
-      // Listener untuk mouse hover (jika masih diinginkan)
+      // ✅ TAMBAHAN: Click handler untuk navigasi
+      const handleCardClick = (e) => {
+        // Jangan navigate jika yang diklik adalah tombol favorite atau child-nya
+        if (e.target.closest(".btn-favorite")) {
+          return; // Biarkan event favorite berjalan
+        }
+
+        // Navigate ke detail page
+        if (href) {
+          window.location.hash = href;
+        }
+      };
+
+      // Event listener untuk mouse click
+      card.addEventListener("click", handleCardClick);
+
+      // ✅ TAMBAHAN: Keyboard navigation (Enter/Space)
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleCardClick(e);
+        }
+      });
+
+      // Highlight marker saat hover
       card.addEventListener("mouseenter", () => {
         if (this.mapHandler && storyId && lat && lon) {
           this.mapHandler.highlightMarker(storyId);
+        }
+      });
+
+      // ✅ TAMBAHAN: Visual feedback saat focus (accessibility)
+      card.addEventListener("focus", () => {
+        card.style.outline = "2px solid var(--border-focus)";
+        card.style.outlineOffset = "2px";
+      });
+
+      card.addEventListener("blur", () => {
+        card.style.outline = "none";
+      });
+    });
+  }
+
+  _setupScrollListener() {
+    const container = document.getElementById("home-page-container");
+    const heroElement = document.querySelector(".home-hero");
+
+    if (!container || !heroElement) {
+      console.warn("⚠️ Container atau hero element tidak ditemukan");
+      return;
+    }
+
+    const triggerHeight = heroElement.offsetHeight;
+
+    this._scrollListener = () => {
+      if (window.scrollY > triggerHeight) {
+        container.classList.add("scrolled-layout");
+      } else {
+        container.classList.remove("scrolled-layout");
+      }
+    };
+
+    window.addEventListener("scroll", this._scrollListener);
+    this._scrollListener();
+
+    console.log("✅ Scroll listener terpasang");
+  }
+
+  async _setupFavoriteButtonListeners() {
+    const container = document.getElementById("stories-container");
+    if (!container) return;
+
+    const favoriteStories = await DatabaseHelper.getAllFavoriteStories();
+    const favoriteIds = favoriteStories.map((story) => story.id);
+
+    const buttons = container.querySelectorAll(".btn-favorite");
+
+    buttons.forEach((button) => {
+      const storyId = button.dataset.storyId;
+
+      if (favoriteIds.includes(storyId)) {
+        button.classList.add("favorited");
+        button.setAttribute(
+          "aria-label",
+          `Remove story ${storyId} from favorites`
+        );
+      } else {
+        button.classList.remove("favorited");
+        button.setAttribute("aria-label", `Save story ${storyId} to favorites`);
+      }
+
+      // ✅ Click handler untuk favorite (dengan stopPropagation)
+      button.addEventListener("click", async (event) => {
+        event.stopPropagation(); // ✅ PENTING: Hentikan bubbling ke card
+        event.preventDefault();
+
+        const isFavorited = button.classList.contains("favorited");
+
+        if (isFavorited) {
+          await DatabaseHelper.deleteFavoriteStory(storyId);
+          button.classList.remove("favorited");
+          button.setAttribute(
+            "aria-label",
+            `Save story ${storyId} to favorites`
+          );
+          NotificationHelper.showToast("Cerita dihapus dari favorit", "info");
+        } else {
+          const storyData = this.stories.find((story) => story.id === storyId);
+          if (storyData) {
+            await DatabaseHelper.putFavoriteStory(storyData);
+            button.classList.add("favorited");
+            button.setAttribute(
+              "aria-label",
+              `Remove story ${storyId} from favorites`
+            );
+            NotificationHelper.showToast("Cerita disimpan ke favorit");
+          } else {
+            NotificationHelper.showError(
+              "Gagal menemukan data cerita untuk disimpan."
+            );
+          }
+        }
+      });
+
+      // ✅ TAMBAHAN: Keyboard handler untuk favorite button
+      button.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          e.stopPropagation(); // Jangan trigger card navigation
+          button.click();
         }
       });
     });
@@ -161,124 +291,21 @@ export default class HomePage {
     }
   }
 
-  // Tambahkan method destroy untuk membersihkan map saat halaman berganti
-
-  _scrollListener = null;
-
-  async afterRender() {
-    if (!authGuard.requireAuth()) return;
-
-    this.mapHandler = new MapHandler("map");
-    this.mapHandler.init();
-
-    await this.presenter.loadStories({ location: 1 });
-    this._setupCardInteractionEvents();
-
-    // Panggil fungsi setup scroll listener (Baru)
-    this._setupScrollListener();
-  }
-  _setupScrollListener() {
-    const container = document.getElementById("home-page-container");
-    const heroElement = document.querySelector(".home-hero"); // Elemen pemicu
-
-    if (!container || !heroElement) return; // Pastikan elemen ada
-
-    // Tentukan tinggi trigger (misalnya, setelah hero tidak terlihat)
-    const triggerHeight = heroElement.offsetHeight;
-
-    // Buat fungsi listener
-    this._scrollListener = () => {
-      if (window.scrollY > triggerHeight) {
-        // Jika sudah scroll melewati hero, tambahkan kelas
-        container.classList.add("scrolled-layout");
-      } else {
-        // Jika kembali ke atas, hapus kelas
-        container.classList.remove("scrolled-layout");
-      }
-    };
-
-    // Tambahkan listener ke window
-    window.addEventListener("scroll", this._scrollListener);
-
-    // Panggil sekali saat load untuk set state awal jika user refresh di tengah halaman
-    this._scrollListener();
-  }
   async destroy() {
-    // Hapus scroll listener jika ada
+    console.log("🧹 Membersihkan HomePage...");
+
     if (this._scrollListener) {
       window.removeEventListener("scroll", this._scrollListener);
-      this._scrollListener = null; // Hapus referensi
-      console.log("Scroll listener removed.");
+      this._scrollListener = null;
+      console.log("✅ Scroll listener dihapus");
     }
 
-    // Hapus map handler
     if (this.mapHandler) {
       this.mapHandler.destroy();
       this.mapHandler = null;
-      console.log("HomePage destroyed, map handler cleaned up.");
+      console.log("✅ Map handler dihapus");
     }
-  }
-  async _setupFavoriteButtonListeners() {
-    const container = document.getElementById("stories-container");
-    if (!container) return;
 
-    // 1. Dapatkan daftar ID favorit dari IndexedDB
-    const favoriteStories = await DatabaseHelper.getAllFavoriteStories();
-    const favoriteIds = favoriteStories.map((story) => story.id);
-
-    const buttons = container.querySelectorAll(".btn-favorite");
-    buttons.forEach((button) => {
-      const storyId = button.dataset.storyId;
-
-      // 2. Tandai tombol yang sudah difavoritkan
-      if (favoriteIds.includes(storyId)) {
-        button.classList.add("favorited");
-        button.setAttribute(
-          "aria-label",
-          `Hapus cerita ${storyId} dari favorit`
-        );
-      } else {
-        button.classList.remove("favorited");
-        button.setAttribute(
-          "aria-label",
-          `Simpan cerita ${storyId} ke favorit`
-        );
-      }
-
-      // 3. Tambahkan event listener
-      button.addEventListener("click", async (event) => {
-        event.stopPropagation(); // Hentikan event agar tidak memicu highlight peta
-
-        const isFavorited = button.classList.contains("favorited");
-
-        if (isFavorited) {
-          // --- LOGIKA DELETE ---
-          await DatabaseHelper.deleteFavoriteStory(storyId);
-          button.classList.remove("favorited");
-          button.setAttribute(
-            "aria-label",
-            `Simpan cerita ${storyId} ke favorit`
-          );
-          NotificationHelper.showToast("Cerita dihapus dari favorit", "info");
-        } else {
-          // --- LOGIKA CREATE ---
-          // Temukan data cerita lengkap dari 'this.stories'
-          const storyData = this.stories.find((story) => story.id === storyId);
-          if (storyData) {
-            await DatabaseHelper.putFavoriteStory(storyData);
-            button.classList.add("favorited");
-            button.setAttribute(
-              "aria-label",
-              `Hapus cerita ${storyId} dari favorit`
-            );
-            NotificationHelper.showToast("Cerita disimpan ke favorit");
-          } else {
-            NotificationHelper.showError(
-              "Gagal menemukan data cerita untuk disimpan."
-            );
-          }
-        }
-      });
-    });
+    console.log("✅ HomePage berhasil dibersihkan");
   }
 }

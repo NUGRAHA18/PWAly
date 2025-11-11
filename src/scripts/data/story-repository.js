@@ -1,10 +1,11 @@
-// Ini adalah isi yang BENAR untuk src/scripts/data/story-repository.js
+// src/scripts/data/story-repository.js
+
 import CONFIG from "../config";
 import authRepository from "./auth-repository";
 
 class StoryRepository {
   constructor() {
-    this.baseUrl = CONFIG.BASE_URL; // Ini "" (kosong)
+    this.baseUrl = CONFIG.BASE_URL; // Ini "" (kosong) untuk development
   }
 
   async getStories({ page = 1, size = 20, location = 1 } = {}) {
@@ -12,7 +13,6 @@ class StoryRepository {
       const token = authRepository.getToken();
       const params = new URLSearchParams({ page, size, location });
 
-      // Perbaikan Path: Tambahkan /v1/
       const response = await fetch(`${this.baseUrl}/v1/stories?${params}`, {
         method: "GET",
         headers: {
@@ -20,14 +20,10 @@ class StoryRepository {
         },
       });
 
-      // Perbaikan Poin 4: Cek .ok dulu
+      // Cek .ok dulu sebelum parse JSON
       if (!response.ok) {
-        try {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Gagal mengambil data");
-        } catch (e) {
-          throw new Error(e.message || "Gagal mengambil data");
-        }
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Gagal mengambil data");
       }
 
       const contentType = response.headers.get("content-type");
@@ -55,7 +51,6 @@ class StoryRepository {
     try {
       const token = authRepository.getToken();
 
-      // Perbaikan Path: Tambahkan /v1/
       const response = await fetch(`${this.baseUrl}/v1/stories/${id}`, {
         method: "GET",
         headers: {
@@ -63,14 +58,10 @@ class StoryRepository {
         },
       });
 
-      // Perbaikan Poin 4: Cek .ok dulu
+      // Cek .ok dulu
       if (!response.ok) {
-        try {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Gagal mengambil detail");
-        } catch (e) {
-          throw new Error(e.message || "Gagal mengambil detail");
-        }
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Gagal mengambil detail");
       }
 
       const contentType = response.headers.get("content-type");
@@ -93,42 +84,48 @@ class StoryRepository {
     }
   }
 
+  /**
+   * ✅ DIPERBAIKI: Kembalikan try-catch, tapi THROW error agar bisa ditangkap presenter
+   * Ini penting untuk Background Sync berfungsi dengan baik
+   */
   async addStory(formData) {
-    // HAPUS "try {" DARI SINI
+    try {
+      const token = authRepository.getToken();
 
-    const token = authRepository.getToken();
+      // Kirim request ke API
+      const response = await fetch(`${this.baseUrl}/v1/stories`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // ❌ JANGAN tambahkan Content-Type untuk FormData!
+          // Browser akan otomatis set dengan boundary yang benar
+        },
+        body: formData,
+      });
 
-    // Perbaikan Path: this.baseUrl adalah "" dan kita panggil /v1/
-    const response = await fetch(`${this.baseUrl}/v1/stories`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      try {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Gagal menambahkan cerita");
-      } catch (e) {
-        throw new Error(e.message || "Gagal menambahkan cerita");
+      // Cek response status
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || "Gagal menambahkan cerita";
+        throw new Error(errorMessage);
       }
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Invalid response format");
+      }
+
+      const data = await response.json();
+
+      return {
+        success: true,
+        message: data.message || "Cerita berhasil ditambahkan",
+      };
+    } catch (error) {
+      // ✅ THROW error agar bisa ditangkap di presenter (untuk offline mode)
+      console.error("Add story error:", error);
+      throw error;
     }
-
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      throw new Error("Invalid response format");
-    }
-
-    const data = await response.json();
-
-    return {
-      success: true,
-      message: data.message || "Cerita berhasil ditambahkan",
-    };
-
-    // HAPUS BLOK "catch (error) { ... }" DARI SINI
   }
 }
 
