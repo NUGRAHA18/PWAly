@@ -167,14 +167,6 @@ export default class LoginPage {
   }
 
   hideLoading() {
-    const button = document.getElementById("login-button");
-    const text = document.getElementById("button-text");
-    const spinner = document.getElementById("button-spinner");
-
-    if (button) button.disabled = false;
-    if (text) text.style.display = "inline-block";
-    if (spinner) spinner.style.display = "none";
-
     // GANTI BAGIAN SPINNER TOMBOL DENGAN INI:
     NotificationHelper.hideLoading(); // <-- Sekarang fungsi ini sudah tersedia
   }

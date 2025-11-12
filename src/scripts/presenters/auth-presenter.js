@@ -30,10 +30,13 @@ class AuthPresenter {
     this.view.hideLoading();
 
     if (result.success) {
-      this.view.showSuccess("Login successful!");
+      // ✅ UBAH: Tampilkan toast sukses, bukan modal "Success"
+      this.view.showSuccess("Login successful! Redirecting...");
+
+      // ✅ UBAH: Kurangi delay, langsung navigasi setelah notifikasi singkat muncul
       setTimeout(() => {
         window.location.hash = "#/";
-      }, 1000);
+      }, 500); // Delay 500ms (0.5 detik)
     } else {
       this.view.showError(result.message);
     }

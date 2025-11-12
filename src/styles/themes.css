@@ -46,7 +46,7 @@
 [data-theme="dark"] {
     /* Background Colors */
     --bg-primary: #0C1713;
-    --bg-secondary: #14211D;
+    --bg-secondary: #101815;
     --bg-tertiary: #1E332A;
     --bg-hover: #2A4438;
     --bg-accent: #34D399;
@@ -79,7 +79,7 @@
     --gradient-card: linear-gradient(135deg, #14211D 0%, #1E332A 100%);
 
     /* RGB Values */
-    --bg-secondary-rgb: 20, 33, 29;
+    --bg-secondary-rgb: 16, 24, 21;
 }
 
 /* ============================================

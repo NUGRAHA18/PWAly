@@ -17,14 +17,14 @@ export default class HomePage {
     this.mapHandler = null;
     this.stories = [];
     this._scrollListener = null;
-    this._animationObserver = new AnimationObserver(); // ← TAMBAHKAN INI
+
+    // ✅ HANYA 1x inisialisasi
     this._animationObserver = new AnimationObserver({
-      rootMargin: "0px 0px -100px 0px", // Trigger 100px sebelum masuk viewport
-      threshold: 0.1, // 10% visible
-      triggerOnce: true, // Animation hanya sekali
+      rootMargin: "0px 0px -100px 0px",
+      threshold: 0.1,
+      triggerOnce: true,
     });
   }
-
   async render() {
     if (!authGuard.requireAuth()) return "";
 
@@ -106,9 +106,17 @@ export default class HomePage {
     this._setupCardInteractionEvents();
     this._setupFavoriteButtonListeners();
 
-    // ✅ TAMBAHKAN INI: Trigger animation observer
+    // ✅ PERBAIKAN: Tambahkan debug log
     setTimeout(() => {
-      this._animationObserver.observeAll(".story-card");
+      const cards = document.querySelectorAll(".story-card");
+      console.log(`🎬 Found ${cards.length} story cards to animate`);
+
+      if (this._animationObserver) {
+        this._animationObserver.observeAll(".story-card");
+        console.log("✅ Animation observer triggered");
+      } else {
+        console.error("❌ AnimationObserver is null!");
+      }
     }, 100);
   }
 
@@ -315,6 +323,36 @@ export default class HomePage {
         });
       }
     }, 50);
+  }
+  displayStories(stories) {
+    this.stories = stories;
+
+    const container = document.getElementById("stories-container");
+    if (container) {
+      container.innerHTML = StoryList.render(stories);
+    }
+
+    const countElement = document.getElementById("stories-count");
+    if (countElement) {
+      countElement.textContent = `(${stories.length} cerita)`;
+    }
+
+    // Setup ulang interaksi setelah story dirender
+    this._setupCardInteractionEvents();
+    this._setupFavoriteButtonListeners();
+
+    // ✅ PERBAIKAN: Tambahkan debug log
+    setTimeout(() => {
+      const cards = document.querySelectorAll(".story-card");
+      console.log(`🎬 Found ${cards.length} story cards to animate`);
+
+      if (this._animationObserver) {
+        this._animationObserver.observeAll(".story-card");
+        console.log("✅ Animation observer triggered");
+      } else {
+        console.error("❌ AnimationObserver is null!");
+      }
+    }, 100);
   }
 
   async destroy() {

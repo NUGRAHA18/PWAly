@@ -4,7 +4,7 @@ header {
     position: sticky;
     top: 0;
     z-index: var(--z-sticky);
-    backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(80px) saturate(180%);
     view-transition-name: main-header;
     contain: layout;
 }

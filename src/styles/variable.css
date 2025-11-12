@@ -1,6 +1,6 @@
 :root[data-theme="dark"] {
     /* --bg-secondary (Dark Mode) adalah #161b22 */
-    --bg-secondary-rgb: 22, 27, 34;
+    --bg-secondary-rgb: 16, 24, 21;
 }
 
 :root[data-theme="light"] {

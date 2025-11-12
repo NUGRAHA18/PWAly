@@ -1,5 +1,4 @@
 import swal from "sweetalert2";
-
 const NotificationHelper = {
   // Global Loading Indicator (untuk memblokir UI selama proses)
   showLoading() {
@@ -12,11 +11,9 @@ const NotificationHelper = {
       },
     });
   },
-
   hideLoading() {
     swal.close();
   },
-
   // Toast notifications (untuk notifikasi kecil di sudut)
   showToast(message, icon = "success") {
     const Toast = swal.mixin({
@@ -30,21 +27,18 @@ const NotificationHelper = {
         toast.addEventListener("mouseleave", swal.resumeTimer);
       },
     });
-
     Toast.fire({
       icon: icon,
       title: message,
     });
   },
-
   // Modal alerts (untuk notifikasi besar)
   showSuccess(message) {
-    swal.fire("Success", message, "success");
+    // swal.fire("Success", message, "success"); // <-- BARIS INI DIHAPUS/DIKOMENTARI
+    this.showToast(message, "success"); // <-- PANGGIL showToast
   },
-
   showError(message) {
     swal.fire("Error", message, "error");
   },
 };
-
 export default NotificationHelper;
