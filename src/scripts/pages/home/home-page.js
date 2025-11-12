@@ -18,6 +18,11 @@ export default class HomePage {
     this.stories = [];
     this._scrollListener = null;
     this._animationObserver = new AnimationObserver(); // ← TAMBAHKAN INI
+    this._animationObserver = new AnimationObserver({
+      rootMargin: "0px 0px -100px 0px", // Trigger 100px sebelum masuk viewport
+      threshold: 0.1, // 10% visible
+      triggerOnce: true, // Animation hanya sekali
+    });
   }
 
   async render() {
@@ -70,6 +75,7 @@ export default class HomePage {
     this._setupCardInteractionEvents();
     this._setupFavoriteButtonListeners();
     this._setupScrollListener();
+    this._setupScrollAnimations();
   }
 
   showLoading() {
@@ -297,6 +303,20 @@ export default class HomePage {
       `;
     }
   }
+
+  _setupScrollAnimations() {
+    // Observe elemen-elemen yang perlu animated
+    const elementsToAnimate = [".home-hero", ".home-map", ".stories-controls"];
+
+    setTimeout(() => {
+      if (this._animationObserver) {
+        elementsToAnimate.forEach((selector) => {
+          this._animationObserver.observeAll(selector);
+        });
+      }
+    }, 50);
+  }
+
   async destroy() {
     console.log("🧹 Membersihkan HomePage...");
 

@@ -190,8 +190,16 @@ footer {
 
 /* Story Card Hover Effect */
 .story-card {
-    transition: all 0.3s ease;
-    border-left: 3px solid transparent;
+    opacity: 0;
+    transform: translateY(60px) rotate(5deg) scale(0.9);
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity, transform;
+}
+
+.story-card.animate-in {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg) scale(1);
 }
 
 .story-card:hover {
@@ -200,14 +208,77 @@ footer {
     transform: translateY(-4px);
 }
 
+.story-card.animate-in {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.skeleton-card {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+}
+
+.story-card:nth-child(3n+1) {
+    transform: translateX(-60px) translateY(40px) scale(0.9);
+}
+
+.story-card:nth-child(3n+1).animate-in {
+    transform: translateX(0) translateY(0) scale(1);
+}
+
+/* Kolom 2: Slide dari bawah (default) */
+.story-card:nth-child(3n+2) {
+    transform: translateY(60px) scale(0.95);
+}
+
+.story-card:nth-child(3n+2).animate-in {
+    transform: translateY(0) scale(1);
+}
+
+/* Kolom 3: Slide dari kanan */
+.story-card:nth-child(3n+3) {
+    transform: translateX(60px) translateY(40px) scale(0.9);
+}
+
+.story-card:nth-child(3n+3).animate-in {
+    transform: translateX(0) translateY(0) scale(1);
+}
+
 /* Gradient Text Headings */
-.home-hero h1,
-.add-story-title,
-.auth-title {
-    background: var(--gradient-accent);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+
+.home-hero {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.home-hero.animate-in {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.home-map {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+    transition: opacity 0.7s ease-out 0.2s, transform 0.7s ease-out 0.2s;
+}
+
+.home-map.animate-in {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+/* Stories Controls */
+.stories-controls {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.stories-controls.animate-in {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 /* Card with Subtle Gradient */
@@ -764,9 +835,16 @@ header::before {
 
 /* Animated state (after entering viewport) */
 .story-card.animate-in {
-    opacity: 1;
-    transform: translateY(0);
-    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 0.3s ease,
+        border-color 0.3s ease;
+}
+
+.story-card.animate-in:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(16, 185, 129, 0.25);
+    border-color: rgba(16, 185, 129, 0.4);
 }
 
 /* Staggered delay masih berlaku */
@@ -845,5 +923,116 @@ header::before {
     to {
         opacity: 0;
         transform: scale(0.95);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .story-card,
+    .home-hero,
+    .home-map,
+    .stories-controls {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* ============================================
+   📱 MOBILE OPTIMIZATION
+   ============================================ */
+
+@media (max-width: 768px) {
+
+    /* Simplify animations untuk mobile */
+    .story-card:nth-child(3n+1),
+    .story-card:nth-child(3n+3) {
+        transform: translateY(40px) scale(0.95);
+    }
+
+    .story-card:nth-child(3n+1).animate-in,
+    .story-card:nth-child(3n+3).animate-in {
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Progress bar container */
+.scroll-progress {
+    position: fixed;
+    top: 60px;
+    /* Di bawah header */
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: rgba(16, 185, 129, 0.1);
+    z-index: var(--z-fixed);
+    pointer-events: none;
+}
+
+/* Progress bar fill */
+.scroll-progress-bar {
+    height: 100%;
+    background: var(--gradient-accent);
+    width: 0%;
+    transition: width 0.1s ease-out;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+/* Mobile adjustment */
+@media (max-width: 768px) {
+    .scroll-progress {
+        top: 56px;
+    }
+}
+
+/* ============================================
+   ⬆️ SCROLL TO TOP BUTTON
+   ============================================ */
+
+.scroll-to-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 50px;
+    height: 50px;
+    background: var(--gradient-accent);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    z-index: var(--z-fixed);
+
+    /* Hidden by default */
+    opacity: 0;
+    transform: translateY(100px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+.scroll-to-top.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.scroll-to-top:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+}
+
+.scroll-to-top:active {
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .scroll-to-top {
+        bottom: 1rem;
+        right: 1rem;
+        width: 45px;
+        height: 45px;
+        font-size: 1.25rem;
     }
 }

@@ -102,6 +102,35 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
   }
+  const progressBar = document.getElementById("scroll-progress-bar");
+  if (progressBar) {
+    window.addEventListener("scroll", () => {
+      const windowHeight =
+        document.documentElement.scrollHeight -
+        document.documentElement.clientHeight;
+      const scrolled = (window.scrollY / windowHeight) * 100;
+      progressBar.style.width = `${scrolled}%`;
+    });
+  }
+  const scrollToTopBtn = document.getElementById("scroll-to-top");
+  if (scrollToTopBtn) {
+    // Show/hide button on scroll
+    window.addEventListener("scroll", () => {
+      if (window.scrollY > 300) {
+        scrollToTopBtn.classList.add("visible");
+      } else {
+        scrollToTopBtn.classList.remove("visible");
+      }
+    });
+
+    // Scroll to top on click
+    scrollToTopBtn.addEventListener("click", () => {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    });
+  }
 
   // Re-render halaman saat hash berubah (SPA)
   window.addEventListener("hashchange", async () => {
