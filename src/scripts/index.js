@@ -66,13 +66,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Tombol toggle notifikasi
+  // ✅✅✅ TAMBAHAN: Event listener untuk tombol notifikasi
   const notificationToggle = document.getElementById("notification-toggle");
   if (notificationToggle) {
-    notificationToggle.addEventListener("click", () => {
-      PushNotificationHelper.handleSubscriptionToggle();
+    notificationToggle.addEventListener("click", async () => {
+      console.log("🔔 Tombol notifikasi diklik");
+      await PushNotificationHelper.handleSubscriptionToggle();
     });
   }
+  // ✅✅✅ AKHIR TAMBAHAN
 
   const app = new App({
     content: document.querySelector("#main-content"),
@@ -84,6 +86,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Daftarkan SW
   await registerServiceWorker();
+
+  // ✅ Update tombol notifikasi setelah SW ready
+  PushNotificationHelper.updateToggleButton();
+
+  // Cek apakah sebelumnya sudah subscribe
+  const wasSubscribed =
+    localStorage.getItem("push-notification-enabled") === "true";
+  if (wasSubscribed) {
+    // Re-subscribe jika sebelumnya aktif
+    PushNotificationHelper.isSubscribed().then((isSubscribed) => {
+      if (!isSubscribed) {
+        console.log("🔄 Re-subscribing ke push notification...");
+        PushNotificationHelper.subscribePush();
+      }
+    });
+  }
 
   // Re-render halaman saat hash berubah (SPA)
   window.addEventListener("hashchange", async () => {

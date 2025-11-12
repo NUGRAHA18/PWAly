@@ -1,5 +1,9 @@
-// src/service-worker.js
+// ==========================================
+// 🔔 PUSH NOTIFICATION HANDLER
+// ==========================================
+// Ganti kode push handler di service-worker.js dengan ini:
 
+// ✅ PUSH NOTIFICATION HANDLER - Mendukung berbagai format payload
 import { precacheAndRoute } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
 import {
@@ -9,150 +13,57 @@ import {
 } from "workbox-strategies";
 import { ExpirationPlugin } from "workbox-expiration";
 import { clientsClaim } from "workbox-core";
-import { BackgroundSyncPlugin } from "workbox-background-sync";
-
 self.skipWaiting();
 clientsClaim();
-
 precacheAndRoute(self.__WB_MANIFEST);
-
-// External styles (Leaflet, Google Fonts)
-registerRoute(
-  ({ request }) =>
-    request.destination === "style" &&
-    (request.url.includes("unpkg.com/leaflet") ||
-      request.url.includes("fonts.googleapis.com")),
-  new StaleWhileRevalidate({
-    cacheName: "external-styles",
-  })
-);
-
-registerRoute(
-  ({ request }) =>
-    request.destination === "script" &&
-    request.url.includes("unpkg.com/leaflet"),
-  new CacheFirst({
-    cacheName: "external-scripts",
-    plugins: [
-      new ExpirationPlugin({
-        maxEntries: 30,
-        maxAgeSeconds: 60 * 60 * 24 * 30, // 30 hari
-      }),
-    ],
-  })
-);
-
-// API stories (lokal)
-registerRoute(
-  ({ url }) =>
-    url.origin === self.location.origin &&
-    url.pathname.startsWith("/v1/stories"),
-  new StaleWhileRevalidate({
-    cacheName: "dicoding-api-stories",
-    plugins: [
-      new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 }),
-    ],
-  })
-);
-
-// Gambar dari API
-registerRoute(
-  ({ request }) =>
-    request.destination === "image" &&
-    request.url.includes("story-api.dicoding.dev"),
-  new CacheFirst({
-    cacheName: "dicoding-api-images",
-    plugins: [
-      new ExpirationPlugin({
-        maxEntries: 100,
-        maxAgeSeconds: 60 * 60 * 24 * 30,
-      }),
-    ],
-  })
-);
-
-// Background Sync
-const bgSyncPlugin = new BackgroundSyncPlugin("story-outbox-queue", {
-  maxRetentionTime: 24 * 60, // menit
-  onSync: async ({ queue }) => {
-    console.log("🔄 Service Worker: Background Sync dimulai...");
-    let entry;
-    try {
-      while ((entry = await queue.shiftRequest())) {
-        try {
-          console.log("📤 Mencoba sync cerita:", entry.request.url);
-          const response = await fetch(entry.request);
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-          console.log("✅ Berhasil sync cerita!");
-
-          const allClients = await self.clients.matchAll();
-          allClients.forEach((client) => {
-            client.postMessage({
-              type: "SYNC_SUCCESS",
-              message: "Cerita berhasil diunggah!",
-            });
-          });
-        } catch (error) {
-          console.error("❌ Gagal sync cerita:", error);
-          // masukkan kembali ke antrian untuk dicoba nanti
-          await queue.unshiftRequest(entry);
-          throw error;
-        }
-      }
-      console.log("🎉 Background Sync selesai!");
-    } catch (syncErr) {
-      console.error("Background sync loop error:", syncErr);
-    }
-  },
-});
-
-// NetworkOnly untuk endpoint login/register (hanya POST)
-registerRoute(
-  ({ url, request }) =>
-    request.method === "POST" &&
-    url.origin === self.location.origin &&
-    (url.pathname.startsWith("/v1/login") ||
-      url.pathname.startsWith("/register")),
-  new NetworkOnly()
-);
-
-// SINGLE, ROBUST PUSH HANDLER (tidak duplikat)
 self.addEventListener("push", (event) => {
   console.log("🔔 Service Worker: Push Notification diterima");
 
   const defaultNotification = {
-    title: "StoryShare",
+    title: "StoryShare - Cerita Baru! 📖",
     options: {
-      body: "Ada cerita baru yang diunggah!",
-      icon: "favicon.png",
-      badge: "favicon.png",
+      body: "Ada cerita baru yang baru saja dibagikan di StoryShare!",
+      icon: "/favicon.png",
+      badge: "/favicon.png",
+      tag: "story-notification",
+      requireInteraction: false,
+      actions: [
+        {
+          action: "view",
+          title: "Lihat Cerita",
+          icon: "/favicon.png",
+        },
+        {
+          action: "close",
+          title: "Tutup",
+        },
+      ],
       data: {
-        url: "#/",
+        url: "/",
+        dateOfArrival: Date.now(),
       },
     },
   };
 
-  // parsing payload dengan aman
+  // ✅ Parse payload dengan aman (mendukung JSON dan text)
   let payload = null;
   if (event.data) {
     try {
       payload = event.data.json();
+      console.log("📦 Payload JSON:", payload);
     } catch (errJson) {
-      // jika bukan JSON, coba ambil textnya
       try {
-        const text = event.data.text ? event.data.text() : null;
+        const text = event.data.text();
         payload = text ? { body: text } : null;
+        console.log("📦 Payload Text:", text);
       } catch (errText) {
+        console.warn("⚠️ Payload tidak dapat dibaca, menggunakan default");
         payload = null;
       }
-      console.warn(
-        "Push event payload is not JSON, using fallback/text or default."
-      );
     }
   }
 
+  // ✅ Buat notification dengan data dari payload atau default
   const title = payload?.title ?? defaultNotification.title;
   const options = {
     ...defaultNotification.options,
@@ -164,46 +75,58 @@ self.addEventListener("push", (event) => {
         payload?.data?.url ??
         payload?.url ??
         defaultNotification.options.data.url,
+      dateOfArrival: Date.now(),
+      payload: payload,
     },
   };
 
+  console.log("📤 Menampilkan notifikasi:", title);
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
+// ==========================================
+// 👆 NOTIFICATION CLICK HANDLER
+// ==========================================
+
 self.addEventListener("notificationclick", (event) => {
-  console.log("👆 Service Worker: Notification clicked");
+  console.log("👆 Notification clicked:", event.action);
 
   const notification = event.notification;
-  const urlToOpen = notification?.data?.url || "#/";
+  const urlToOpen = notification?.data?.url || "/";
+
   notification.close();
 
+  // ✅ Handle action buttons
+  if (event.action === "close") {
+    console.log("User closed the notification");
+    return;
+  }
+
+  // ✅ Navigate ke URL (default action atau "view" button)
   event.waitUntil(
     clients
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((clientsArr) => {
-        const targetUrl = new URL(urlToOpen, self.location.origin).href;
+        // Coba cari window yang sudah terbuka
         const existingClient = clientsArr.find((client) => {
-          // lebih toleran: cocokkan prefix atau exact match
-          return client.url === targetUrl || client.url.startsWith(targetUrl);
+          const clientUrl = new URL(client.url);
+          const targetUrl = new URL(urlToOpen, self.location.origin);
+          return clientUrl.origin === targetUrl.origin;
         });
 
         if (existingClient) {
-          return existingClient.focus();
+          // Fokuskan window yang ada dan navigate
+          return existingClient.focus().then((client) => {
+            if (client.navigate) {
+              return client.navigate(urlToOpen);
+            }
+          });
         } else {
+          // Buka window baru
           return clients.openWindow(urlToOpen);
         }
       })
   );
 });
 
-self.addEventListener("message", async (event) => {
-  if (event.data && event.data.type === "DELETE_OUTBOX_STORY") {
-    console.log(
-      "🗑️ Service Worker: Menerima perintah hapus outbox story:",
-      event.data.storyId
-    );
-    // Sebaiknya hapus di thread utama (client), tapi jika perlu bisa dilakukan di sini
-  }
-});
-
-console.log("🚀 Service Worker loaded and ready!");
+console.log("🚀 Push Notification Handler siap!");

@@ -25,8 +25,11 @@ const CONFIG = {
   // ✅ TESTING VAPID Key (untuk testing lokal)
   // Key ini adalah key testing sendiri, bukan dari Dicoding
   // GANTI KEMBALI ke key Dicoding sebelum submission!
+  // src/scripts/config.js
+
   PUSH_NOTIFICATION_VAPID_PUBLIC_KEY:
-    "BAcTwfjvyIi3PKbN5G8zYCd4e-OA7qjtN-uPcAY3w6Gl1KxrdJVX7Z8SGJbIAAiUaMYU9eR_HTFb_h5MdU3djq8",
+    "BCCs2eonMI-6H2ctvFaWg-UYdDv387Vno_bzUzALpB442r2lCnsHmtrx8biyPi_E-1fSGABK_Qs_GlvPoJJqxbk",
+  // ☝️ Ini key resmi dari Dicoding API
 
   // ✅ TAMBAHAN: Konfigurasi lainnya
   APP_NAME: "StoryShare",
