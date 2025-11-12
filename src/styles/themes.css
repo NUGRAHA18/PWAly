@@ -1,69 +1,100 @@
+/* ============================================
+   🌿 GREEN-MINT THEME - Light Mode
+   ============================================ */
+[data-theme="light"] {
+    /* Background Colors */
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F0FDF4;
+    --bg-tertiary: #DCFCE7;
+    --bg-hover: #BBF7D0;
+    --bg-accent: #10B981;
+    --bg-input: #FFFFFF;
+    --bg-card: #FFFFFF;
+
+    /* Text Colors */
+    --text-primary: #1F2937;
+    --text-secondary: #6B7280;
+    --text-tertiary: #9CA3AF;
+    --text-inverse: #FFFFFF;
+    --text-link: #059669;
+    --text-link-hover: #047857;
+
+    /* Border Colors */
+    --border-primary: #D1FAE5;
+    --border-secondary: #E5E7EB;
+    --border-focus: #10B981;
+    --border-input: #D1D5DB;
+    --border-input-focus: #10B981;
+
+    /* Status Colors */
+    --color-success: #10B981;
+    --color-error: #EF4444;
+    --color-warning: #F59E0B;
+    --color-info: #06B6D4;
+
+    /* Gradients */
+    --gradient-accent: linear-gradient(135deg, #10B981 0%, #06B6D4 100%);
+    --gradient-card: linear-gradient(135deg, #FFFFFF 0%, #F0FDF4 100%);
+
+    /* RGB Values (untuk transparansi) */
+    --bg-secondary-rgb: 240, 253, 244;
+}
+
+/* ============================================
+   🌙 GREEN-MINT THEME - Dark Mode
+   ============================================ */
 [data-theme="dark"] {
-    --bg-primary: #0d1117;
-    --bg-secondary: #161b22;
-    --bg-tertiary: #21262d;
-    --bg-hover: #30363d;
-    --bg-accent: #58a6ff;
-    --bg-input: #0d1117;
-    --bg-card: #161b22;
-    --text-primary: #e6edf3;
-    --text-secondary: #8b949e;
-    --text-tertiary: #6e7681;
-    --text-inverse: #0d1117;
-    --text-link: #58a6ff;
-    --text-link-hover: #79c0ff;
-    --border-primary: #30363d;
-    --border-secondary: #21262d;
-    --border-focus: #58a6ff;
-    --border-input: #30363d;
-    --border-input-focus: #58a6ff;
-    --color-success: #3fb950;
-    --color-error: #f85149;
-    --color-warning: #d29922;
-    --color-info: #58a6ff;
-    --gradient-accent: linear-gradient(135deg, #58a6ff 0%, #7c3aed 100%);
-    --gradient-card: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
-    --bg-secondary-rgb: 22, 27, 34;
+    /* Background Colors */
+    --bg-primary: #0C1713;
+    --bg-secondary: #14211D;
+    --bg-tertiary: #1E332A;
+    --bg-hover: #2A4438;
+    --bg-accent: #34D399;
+    --bg-input: #14211D;
+    --bg-card: #14211D;
+
+    /* Text Colors */
+    --text-primary: #F3F4F6;
+    --text-secondary: #D1D5DB;
+    --text-tertiary: #9CA3AF;
+    --text-inverse: #0C1713;
+    --text-link: #6EE7B7;
+    --text-link-hover: #A7F3D0;
+
+    /* Border Colors */
+    --border-primary: #2A4438;
+    --border-secondary: #1E332A;
+    --border-focus: #34D399;
+    --border-input: #2A4438;
+    --border-input-focus: #34D399;
+
+    /* Status Colors */
+    --color-success: #34D399;
+    --color-error: #F87171;
+    --color-warning: #FBBF24;
+    --color-info: #22D3EE;
+
+    /* Gradients */
+    --gradient-accent: linear-gradient(135deg, #34D399 0%, #22D3EE 100%);
+    --gradient-card: linear-gradient(135deg, #14211D 0%, #1E332A 100%);
+
+    /* RGB Values */
+    --bg-secondary-rgb: 20, 33, 29;
+}
+
+/* ============================================
+   🌿 SHADOWS - Adjusted for Green Theme
+   ============================================ */
+[data-theme="dark"] {
+    --shadow-sm: 0 1px 2px 0 rgba(16, 185, 129, 0.1);
+    --shadow-md: 0 4px 6px -1px rgba(16, 185, 129, 0.15);
+    --shadow-lg: 0 10px 15px -3px rgba(16, 185, 129, 0.2);
+    --shadow-xl: 0 20px 25px -5px rgba(16, 185, 129, 0.25);
 }
 
 [data-theme="light"] {
-    --bg-primary: #ffffff;
-    --bg-secondary: #f7f9fc;
-    --bg-tertiary: #eef2f7;
-    --bg-hover: #dfe7ef;
-    --bg-accent: #007bff;
-    --bg-input: #ffffff;
-    --bg-card: #ffffff;
-    --text-primary: #212529;
-    --text-secondary: #6c757d;
-    --text-tertiary: #adb5bd;
-    --text-inverse: #ffffff;
-    --text-link: #007bff;
-    --text-link-hover: #0056b3;
-    --border-primary: #dee2e6;
-    --border-secondary: #e9ecef;
-    --border-focus: #80bdff;
-    --border-input: #ced4da;
-    --border-input-focus: #80bdff;
-    --color-success: #198754;
-    --color-error: #dc3545;
-    --color-warning: #ffc107;
-    --color-info: #0dcaf0;
-    --gradient-accent: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-    --gradient-card: linear-gradient(135deg, #ffffff 0%, #f7f9fc 100%);
-    --bg-secondary-rgb: 247, 249, 252;
-}
-
-[data-theme="dark"] {
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
-}
-
-[data-theme="light"] {
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.07);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.12);
+    --shadow-sm: 0 1px 2px 0 rgba(16, 185, 129, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(16, 185, 129, 0.08);
+    --shadow-lg: 0 10px 15px -3px rgba(16, 185, 129, 0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(16, 185, 129, 0.12);
 }

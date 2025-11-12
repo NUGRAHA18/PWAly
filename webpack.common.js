@@ -4,6 +4,7 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 // --- TAMBAHKAN IMPOR INI ---
 const WorkboxWebpackPlugin = require("workbox-webpack-plugin");
 // -----------------------------
+const { InjectManifest } = require("workbox-webpack-plugin");
 
 module.exports = {
   entry: {
@@ -39,12 +40,15 @@ module.exports = {
         // Pastikan service-worker.js TIDAK ada di sini
       ],
     }),
-
-    // --- TAMBAHKAN BLOK PLUGIN INI ---
-    new WorkboxWebpackPlugin.InjectManifest({
+    new InjectManifest({
       swSrc: path.resolve(__dirname, "src/service-worker.js"),
       swDest: "service-worker.js",
+
+      // ✅ TAMBAHAN PENTING:
+      exclude: [/\.map$/, /^manifest.*\.js$/, /\.git/, /node_modules/],
+
+      // ✅ Maksimalkan file precache (opsional)
+      maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
     }),
-    // ---------------------------------
   ],
 };

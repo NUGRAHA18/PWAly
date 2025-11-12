@@ -9,6 +9,7 @@ import MapHandler from "../../utils/map-handler";
 import DatabaseHelper from "../../utils/database-helper";
 import NotificationHelper from "../../utils/notification-helper";
 import LoadingSpinner from "../../components/loading-spinner";
+import AnimationObserver from "../../utils/animation-observer";
 
 export default class HomePage {
   constructor() {
@@ -16,6 +17,7 @@ export default class HomePage {
     this.mapHandler = null;
     this.stories = [];
     this._scrollListener = null;
+    this._animationObserver = new AnimationObserver(); // ← TAMBAHKAN INI
   }
 
   async render() {
@@ -97,6 +99,11 @@ export default class HomePage {
     // Setup ulang interaksi setelah story dirender
     this._setupCardInteractionEvents();
     this._setupFavoriteButtonListeners();
+
+    // ✅ TAMBAHKAN INI: Trigger animation observer
+    setTimeout(() => {
+      this._animationObserver.observeAll(".story-card");
+    }, 100);
   }
 
   displayMap(stories) {
@@ -290,7 +297,6 @@ export default class HomePage {
       `;
     }
   }
-
   async destroy() {
     console.log("🧹 Membersihkan HomePage...");
 
@@ -304,6 +310,13 @@ export default class HomePage {
       this.mapHandler.destroy();
       this.mapHandler = null;
       console.log("✅ Map handler dihapus");
+    }
+
+    // ✅ TAMBAHKAN INI
+    if (this._animationObserver) {
+      this._animationObserver.disconnect();
+      this._animationObserver = null;
+      console.log("✅ Animation observer dihapus");
     }
 
     console.log("✅ HomePage berhasil dibersihkan");

@@ -16,13 +16,12 @@ header {
 }
 
 .brand-name {
-    font-size: 1.25rem;
+    background: var(--gradient-accent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     font-weight: 700;
-    color: var(--text-primary);
-    text-decoration: none;
-    transition: opacity var(--transition-fast);
     letter-spacing: -0.025em;
-    flex-shrink: 0;
 }
 
 .brand-name:hover {
