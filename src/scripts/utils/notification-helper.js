@@ -1,68 +1,146 @@
-import Swal from "sweetalert2";
+import CONFIG from "../config";
+import NotificationHelper from "./notification-helper";
 
-const Toast = Swal.mixin({
-  toast: true,
-  position: "top-end",
-  showConfirmButton: false,
-  timer: 3000,
-  timerProgressBar: true,
-  background: "var(--bg-card)", // Ambil warna dari CSS
-  color: "var(--text-primary)", // Ambil warna dari CSS
-  didOpen: (toast) => {
-    toast.addEventListener("mouseenter", Swal.stopTimer);
-    toast.addEventListener("mouseleave", Swal.resumeTimer);
-  },
-});
+// Helper function untuk mengubah VAPID key
+const urlBase64ToUint8Array = (base64String) => {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+};
 
-const NotificationHelper = {
-  showToast(message, icon = "success") {
-    Toast.fire({
-      icon: icon,
-      title: message,
-    });
-  },
-  // Untuk menggantikan showSuccess()
-  showSuccess(message) {
-    Swal.fire({
-      icon: "success",
-      title: "Success!",
-      text: message,
-      background: "var(--bg-card)",
-      color: "var(--text-primary)",
-      timer: 1500, // Menutup otomatis setelah 1.5 detik
-      showConfirmButton: false,
-    });
-  },
+const PushNotificationHelper = {
+  async askPermission() {
+    try {
+      const permissionResult = await Notification.requestPermission();
+      if (permissionResult === "denied") {
+        NotificationHelper.showError("Anda memblokir izin notifikasi.");
+        return false;
+      }
 
-  // Untuk menggantikan showError()
-  showError(message) {
-    Swal.fire({
-      icon: "error",
-      title: "Oops...",
-      text: message,
-      background: "var(--bg-card)",
-      color: "var(--text-primary)",
-    });
+      if (permissionResult === "default") {
+        NotificationHelper.showError("Anda menutup kotak izin notifikasi.");
+        return false;
+      }
+
+      console.log("Notification permission granted.");
+      return true;
+    } catch (error) {
+      console.error("Error asking permission:", error);
+      return false;
+    }
   },
 
-  // Untuk menggantikan showLoading() di form
-  showLoading() {
-    Swal.fire({
-      title: "Loading...",
-      text: "Please wait",
-      background: "var(--bg-card)",
-      color: "var(--text-primary)",
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-    });
+  async subscribePush() {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      NotificationHelper.showError(
+        "Browser Anda tidak mendukung Push Notification."
+      );
+      return;
+    }
+
+    try {
+      // ✅ PERBAIKAN: Tunggu service worker ready
+      console.log("Waiting for service worker...");
+      const registration = await navigator.serviceWorker.ready;
+      console.log("✅ Service worker ready");
+
+      let subscription = await registration.pushManager.getSubscription();
+
+      if (subscription) {
+        NotificationHelper.showSuccess("Anda sudah berlangganan notifikasi.");
+        console.log("User is already subscribed:", subscription);
+        return;
+      }
+
+      // ✅ PERBAIKAN: Validasi VAPID key
+      const vapidPublicKey = CONFIG.PUSH_NOTIFICATION_VAPID_PUBLIC_KEY;
+
+      console.log("VAPID Key:", vapidPublicKey);
+      console.log(
+        "VAPID Key length:",
+        vapidPublicKey ? vapidPublicKey.length : 0
+      );
+
+      if (!vapidPublicKey) {
+        console.error("❌ VAPID Public Key is empty");
+        NotificationHelper.showError(
+          "Konfigurasi notifikasi (VAPID key) belum diatur."
+        );
+        return;
+      }
+
+      // ✅ PERBAIKAN: Cek panjang key (should be 87-88 characters)
+      if (vapidPublicKey.length < 85 || vapidPublicKey.length > 90) {
+        console.error("❌ VAPID Key length invalid:", vapidPublicKey.length);
+        NotificationHelper.showError(
+          "VAPID key tidak valid. Panjang key: " + vapidPublicKey.length
+        );
+        return;
+      }
+
+      // ✅ PERBAIKAN: Try-catch untuk konversi key
+      let convertedVapidKey;
+      try {
+        convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
+        console.log(
+          "✅ VAPID key converted, length:",
+          convertedVapidKey.length
+        );
+      } catch (conversionError) {
+        console.error("❌ Failed to convert VAPID key:", conversionError);
+        NotificationHelper.showError(
+          "Gagal mengonversi VAPID key: " + conversionError.message
+        );
+        return;
+      }
+
+      console.log("Subscribing user...");
+
+      // ✅ PERBAIKAN: Subscribe dengan error handling lebih baik
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: convertedVapidKey,
+      });
+
+      console.log("✅ User subscribed:", subscription);
+      console.log("Subscription endpoint:", subscription.endpoint);
+
+      NotificationHelper.showSuccess("Berhasil berlangganan notifikasi!");
+    } catch (error) {
+      console.error("❌ Failed to subscribe:", error);
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
+
+      // ✅ PERBAIKAN: Error messages yang lebih spesifik
+      if (error.name === "InvalidAccessError") {
+        NotificationHelper.showError(
+          "VAPID key tidak valid. Pastikan menggunakan key dari Dicoding yang benar."
+        );
+      } else if (error.name === "NotAllowedError") {
+        NotificationHelper.showError(
+          "Permission ditolak. Izinkan notifikasi di browser settings."
+        );
+      } else if (error.name === "AbortError") {
+        NotificationHelper.showError("Subscription dibatalkan. Coba lagi.");
+      } else {
+        NotificationHelper.showError(
+          `Gagal berlangganan: ${error.message || error.name}`
+        );
+      }
+    }
   },
 
-  // Untuk menggantikan hideLoading()
-  hideLoading() {
-    Swal.close();
+  async handleSubscriptionToggle() {
+    const permissionGranted = await this.askPermission();
+    if (permissionGranted) {
+      await this.subscribePush();
+    }
   },
 };
 
-export default NotificationHelper;
+export default PushNotificationHelper;

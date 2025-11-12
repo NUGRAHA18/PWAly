@@ -6,7 +6,7 @@ class StoryCard {
 
     // --- PERUBAHAN DI SINI: dari <article> menjadi <a> ---
     return `
-      <a
+      <article
         class="story-card"
         href="#/story/${story.id}"
         data-story-id="${story.id}"
@@ -54,7 +54,7 @@ class StoryCard {
           </div>
 
         </div>
-      </a>
+      </article>
     `;
     // --- AKHIR PERUBAHAN ---
   }
