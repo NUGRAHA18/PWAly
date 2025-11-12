@@ -44,7 +44,7 @@ const CONFIG = {
 
   // API endpoints
   ENDPOINTS: {
-    REGISTER: "/register",
+    REGISTER: "/v1/register",
     LOGIN: "/v1/login",
     STORIES: "/v1/stories",
     STORY_DETAIL: (id) => `/v1/stories/${id}`,

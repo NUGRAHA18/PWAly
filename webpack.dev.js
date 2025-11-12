@@ -44,25 +44,16 @@ module.exports = merge(common, {
     // ✅ PROXY ke API Dicoding (SUDAH BENAR)
     proxy: [
       {
-        context: ["/register", "/login", "/v1"], // Tangkap semua path API
+        context: ["/register"], // Path yang ingin di-proxy
         target: "https://story-api.dicoding.dev",
         changeOrigin: true,
-        secure: true,
-
-        // ✅ TAMBAHAN: Log untuk debugging
-        onProxyReq: (proxyReq, req, res) => {
-          console.log(
-            `🔀 Proxying: ${req.method} ${req.url} → https://story-api.dicoding.dev${req.url}`
-          );
-        },
-
-        onProxyRes: (proxyRes, req, res) => {
-          console.log(`✅ Response: ${proxyRes.statusCode} from ${req.url}`);
-        },
-
-        onError: (err, req, res) => {
-          console.error(`❌ Proxy Error for ${req.url}:`, err.message);
-        },
+        secure: false,
+      },
+      {
+        context: ["/v1"], // Path yang ingin di-proxy
+        target: "https://story-api.dicoding.dev",
+        changeOrigin: true,
+        secure: false,
       },
     ],
   },

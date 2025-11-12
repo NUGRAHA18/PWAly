@@ -266,7 +266,6 @@ const PushNotificationHelper = {
     }
   },
 
-  // ✅ BONUS: Test notification lokal
   async sendTestNotification() {
     if (!this.isSupported()) {
       NotificationHelper.showToast(

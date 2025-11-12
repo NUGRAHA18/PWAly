@@ -1,24 +1,82 @@
-// ==========================================
-// 🔔 PUSH NOTIFICATION HANDLER
-// ==========================================
-// Ganti kode push handler di service-worker.js dengan ini:
+// src/service-worker.js (KODE LENGKAP & BENAR)
 
-// ✅ PUSH NOTIFICATION HANDLER - Mendukung berbagai format payload
 import { precacheAndRoute } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
-import {
-  StaleWhileRevalidate,
-  CacheFirst,
-  NetworkOnly,
-} from "workbox-strategies";
+import { StaleWhileRevalidate, CacheFirst } from "workbox-strategies";
 import { ExpirationPlugin } from "workbox-expiration";
 import { clientsClaim } from "workbox-core";
 import { CacheableResponsePlugin } from "workbox-cacheable-response";
-import { BackgroundSyncPlugin } from "workbox-background-sync";
+// import { BackgroundSyncPlugin } from "workbox-background-sync"; // (Anda belum menggunakan ini)
 
 self.skipWaiting();
 clientsClaim();
+
+// ==========================================================
+// 1. PRECATCHING (Aset dari Webpack)
+// ==========================================================
 precacheAndRoute(self.__WB_MANIFEST);
+
+// ==========================================================
+// 2. STRATEGI CACHING (DI TOP-LEVEL)
+// ==========================================================
+
+// Cache untuk API Dicoding
+registerRoute(
+  ({ url }) =>
+    url.origin === "https://story-api.dicoding.dev" &&
+    (url.pathname === "/v1/stories" || url.pathname.startsWith("/v1/stories/")), // Mencakup list dan detail
+  new StaleWhileRevalidate({
+    cacheName: "story-api-cache",
+    plugins: [
+      new CacheableResponsePlugin({
+        statuses: [0, 200], // 0: Untuk permintaan cross-origin
+      }),
+      new ExpirationPlugin({
+        maxEntries: 50,
+        maxAgeSeconds: 24 * 60 * 60, // Cache untuk 1 hari
+      }),
+    ],
+  })
+);
+
+// Cache untuk Gambar
+registerRoute(
+  ({ request }) => request.destination === "image",
+  new CacheFirst({
+    cacheName: "story-image-cache",
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 60,
+        maxAgeSeconds: 30 * 24 * 60 * 60, // Cache untuk 30 hari
+      }),
+    ],
+  })
+);
+
+// ==========================================================
+// 3. BACKGROUND SYNC HANDLER (DI TOP-LEVEL)
+// ==========================================================
+
+async function processOutboxQueue() {
+  // TODO: Implementasikan logika ini untuk Kriteria Offline
+  // 1. Dapatkan referensi ke DatabaseHelper (atau buat ulang)
+  // 2. Ambil semua cerita dari stories-outbox
+  // 3. Iterasi dan coba kirim setiap cerita ke API
+  // 4. Jika sukses, hapus dari outbox dan kirim pesan SYNC_SUCCESS
+  console.log("🔄 Memproses antrian outbox...");
+}
+
+self.addEventListener("sync", (event) => {
+  if (event.tag === "sync-new-stories") {
+    console.log("🔄 Menerima event sync dari Outbox...");
+    event.waitUntil(processOutboxQueue());
+  }
+});
+
+// ==========================================================
+// 4. PUSH NOTIFICATION HANDLER (DI TOP-LEVEL)
+// ==========================================================
+
 self.addEventListener("push", (event) => {
   console.log("🔔 Service Worker: Push Notification diterima");
 
@@ -47,51 +105,8 @@ self.addEventListener("push", (event) => {
       },
     },
   };
-  self.addEventListener("sync", (event) => {
-    if (event.tag === "sync-new-stories") {
-      console.log("🔄 Menerima event sync dari Outbox...");
-      event.waitUntil(processOutboxQueue());
-    }
-  });
-  registerRoute(
-    ({ url }) =>
-      url.origin === "https://story-api.dicoding.dev" &&
-      (url.pathname === "/v1/stories" ||
-        url.pathname.startsWith("/v1/stories/")), // Mencakup list dan detail
-    new StaleWhileRevalidate({
-      cacheName: "story-api-cache",
-      plugins: [
-        // Agar hanya merespon 200/OK (sukses)
-        new CacheableResponsePlugin({
-          statuses: [0, 200], // 0: Untuk permintaan cross-origin
-        }),
-        new ExpirationPlugin({
-          maxEntries: 50,
-          maxAgeSeconds: 24 * 60 * 60, // Cache untuk 1 hari
-        }),
-      ],
-    })
-  );
 
-  registerRoute(
-    ({ request }) => request.destination === "image",
-    new CacheFirst({
-      cacheName: "story-image-cache",
-      plugins: [
-        new ExpirationPlugin({
-          maxEntries: 60,
-          maxAgeSeconds: 30 * 24 * 60 * 60, // Cache untuk 30 hari
-        }),
-      ],
-    })
-  );
-  async function processOutboxQueue() {
-    // 1. Dapatkan referensi ke DatabaseHelper (atau buat ulang)
-    // 2. Ambil semua cerita dari stories-outbox
-    // 3. Iterasi dan coba kirim setiap cerita ke API
-    // 4. Jika sukses, hapus dari outbox dan kirim pesan SYNC_SUCCESS
-  }
-  // ✅ Parse payload dengan aman (mendukung JSON dan text)
+  // Parse payload dengan aman (mendukung JSON dan text)
   let payload = null;
   if (event.data) {
     try {
@@ -109,7 +124,7 @@ self.addEventListener("push", (event) => {
     }
   }
 
-  // ✅ Buat notification dengan data dari payload atau default
+  // Buat notification dengan data dari payload atau default
   const title = payload?.title ?? defaultNotification.title;
   const options = {
     ...defaultNotification.options,
@@ -130,9 +145,9 @@ self.addEventListener("push", (event) => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// ==========================================
-// 👆 NOTIFICATION CLICK HANDLER
-// ==========================================
+// ==========================================================
+// 5. NOTIFICATION CLICK HANDLER (DI TOP-LEVEL)
+// ==========================================================
 
 self.addEventListener("notificationclick", (event) => {
   console.log("👆 Notification clicked:", event.action);
@@ -142,13 +157,13 @@ self.addEventListener("notificationclick", (event) => {
 
   notification.close();
 
-  // ✅ Handle action buttons
+  // Handle action buttons
   if (event.action === "close") {
     console.log("User closed the notification");
     return;
   }
 
-  // ✅ Navigate ke URL (default action atau "view" button)
+  // Navigate ke URL (default action atau "view" button)
   event.waitUntil(
     clients
       .matchAll({ type: "window", includeUncontrolled: true })
@@ -175,4 +190,4 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-console.log("🚀 Push Notification Handler siap!");
+console.log("🚀 Service Worker Siap (Caching, Sync, & Push Aktif)!");

@@ -74,6 +74,55 @@ document.addEventListener("DOMContentLoaded", async () => {
       await PushNotificationHelper.handleSubscriptionToggle();
     });
   }
+  let deferredInstallPrompt = null;
+  const installButton = document.getElementById("install-button");
+
+  if (installButton) {
+    // Tampilkan tombol jika event PWA diterima
+    window.addEventListener("beforeinstallprompt", (event) => {
+      // Mencegah browser menampilkan prompt default-nya
+      event.preventDefault();
+
+      // Simpan event untuk digunakan nanti
+      deferredInstallPrompt = event;
+
+      // Tampilkan tombol instalasi kustom Anda
+      console.log("✅ PWA install prompt deferred. Showing custom button.");
+      // 'inline-flex' agar cocok dengan style .theme-toggle
+      installButton.style.display = "inline-flex";
+    });
+
+    // Tambahkan listener ke tombol kustom Anda
+    installButton.addEventListener("click", async () => {
+      if (!deferredInstallPrompt) {
+        // Jika tidak ada event (mungkin sudah diinstal atau browser tidak mendukung)
+        console.warn("Install prompt event not available.");
+        return;
+      }
+
+      // Tampilkan dialog instalasi PWA dari browser
+      deferredInstallPrompt.prompt();
+
+      // Tunggu hasil pilihan user
+      const { outcome } = await deferredInstallPrompt.userChoice;
+
+      if (outcome === "accepted") {
+        console.log("✅ PWA installation accepted by user.");
+      } else {
+        console.log("❌ PWA installation dismissed by user.");
+      }
+
+      // Sembunyikan tombol (event hanya bisa dipakai sekali)
+      deferredInstallPrompt = null;
+      installButton.style.display = "none";
+    });
+
+    // Sembunyikan tombol jika PWA sudah terinstal (berjalan standalone)
+    if (window.matchMedia("(display-mode: standalone)").matches) {
+      console.log("PWA is running in standalone mode, hiding install button.");
+      installButton.style.display = "none";
+    }
+  }
   // ✅✅✅ AKHIR TAMBAHAN
 
   const app = new App({
