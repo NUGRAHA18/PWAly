@@ -94,26 +94,19 @@ const bgSyncPlugin = new BackgroundSyncPlugin("story-outbox-queue", {
 
         console.log("✅ Berhasil sync cerita!");
 
-        // ✅ PERBAIKAN: Ambil ID dari URL atau request body
-        const formData = await entry.request.formData();
-        const storyId = formData.get("id");
-
-        if (storyId) {
-          // Kirim pesan ke client untuk hapus dari IndexedDB
-          const clients = await self.clients.matchAll();
-          clients.forEach((client) => {
-            client.postMessage({
-              type: "SYNC_SUCCESS",
-              storyId: storyId,
-            });
+        // ✅ PERBAIKAN: Kirim pesan ke client bahwa sync berhasil
+        const clients = await self.clients.matchAll();
+        clients.forEach((client) => {
+          client.postMessage({
+            type: "SYNC_SUCCESS",
+            message: "Cerita berhasil diunggah!",
           });
-          console.log("📨 Pesan dikirim ke client untuk hapus story:", storyId);
-        }
+        });
       } catch (error) {
         console.error("❌ Gagal sync cerita:", error);
         // Kembalikan ke antrian untuk dicoba lagi nanti
         await queue.unshiftRequest(entry);
-        throw error; // Lempar error agar Workbox tahu ini gagal
+        throw error;
       }
     }
 

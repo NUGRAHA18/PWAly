@@ -5,7 +5,6 @@ import "../styles/styles.css";
 import App from "./pages/app";
 import ThemeHandler from "./utils/theme-handler";
 import PushNotificationHelper from "./utils/push-notification-helper";
-import DatabaseHelper from "./utils/database-helper"; // ✅ Import helper
 
 // Fungsi untuk mendaftarkan Service Worker
 const registerServiceWorker = async () => {
@@ -21,24 +20,18 @@ const registerServiceWorker = async () => {
         console.log("📨 Pesan dari Service Worker:", event.data);
 
         if (event.data && event.data.type === "SYNC_SUCCESS") {
-          // Hapus story dari outbox IndexedDB
-          const storyId = event.data.storyId;
-          if (storyId) {
-            try {
-              await DatabaseHelper.deleteOutboxStory(storyId);
-              console.log("🗑️ Story berhasil dihapus dari outbox:", storyId);
+          console.log("✅ Background sync berhasil!");
 
-              // Optional: Tampilkan notifikasi ke user
-              if (Notification.permission === "granted") {
-                new Notification("Cerita Berhasil Diunggah! 🎉", {
-                  body: "Cerita yang tersimpan sudah berhasil diunggah ke server.",
-                  icon: "favicon.png",
-                });
-              }
-            } catch (error) {
-              console.error("❌ Gagal hapus dari outbox:", error);
-            }
+          // Optional: Tampilkan notifikasi ke user
+          if (Notification.permission === "granted") {
+            new Notification("Cerita Berhasil Diunggah! 🎉", {
+              body: "Cerita yang tersimpan sudah berhasil diunggah ke server.",
+              icon: "favicon.png",
+            });
           }
+
+          // Optional: Reload page untuk refresh data
+          // window.location.reload();
         }
       });
     } catch (error) {

@@ -18,13 +18,12 @@ class AddStoryPresenter {
   async handleAddStory(storyData) {
     this.view.showLoading();
 
-    // 1. Generate ID unik untuk cerita
-    const storyId = Date.now().toString(); // Gunakan timestamp sebagai ID
+    // 1. Generate ID untuk IndexedDB (bukan untuk API)
+    const storyId = Date.now().toString();
     storyData.id = storyId;
 
-    // 2. ✅ Buat FormData DULU (sebelum coba kirim)
+    // 2. ✅ Buat FormData TANPA id (API Dicoding tidak terima field id)
     const formData = new FormData();
-    formData.append("id", storyData.id); // ✅ ID ada di FormData untuk Background Sync
     formData.append("description", storyData.description);
     formData.append("photo", storyData.photo, storyData.photo.name);
 
@@ -46,7 +45,6 @@ class AddStoryPresenter {
           window.location.hash = "#/";
         }, 1500);
       } else {
-        // Ini seharusnya tidak terjadi karena error sudah di-throw di repository
         this.view.showError(result.message || "Gagal menambahkan cerita.");
       }
     } catch (error) {
@@ -55,12 +53,9 @@ class AddStoryPresenter {
 
       console.warn("📡 Offline mode detected:", error.message);
 
-      // Simpan data mentah ke IndexedDB (untuk favorit/display)
+      // Simpan data mentah ke IndexedDB (pakai id untuk indexing)
       try {
         await DatabaseHelper.putOutboxStory(storyData);
-
-        // ✅ Background Sync akan otomatis menangani pengiriman ulang
-        // karena request sudah masuk ke Workbox queue
 
         this.view.showSuccess(
           "Kamu sedang offline. Cerita akan otomatis diunggah saat online kembali! 📤"
