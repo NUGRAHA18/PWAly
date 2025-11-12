@@ -29,7 +29,7 @@ module.exports = merge(common, {
 
   devServer: {
     static: path.resolve(__dirname, "dist"),
-    port: 3000,
+    port: 1000,
 
     // ✅ Hot Module Replacement
     hot: true,
