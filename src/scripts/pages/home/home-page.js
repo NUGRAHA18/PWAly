@@ -1,5 +1,3 @@
-// src/scripts/pages/home/home-page.js (VERSI LENGKAP DIPERBARUI)
-
 import authGuard from "../../utils/auth-guard";
 import HomePresenter from "../../presenters/home-presenter";
 import StoryList from "../../components/story-list";
@@ -7,15 +5,15 @@ import StoryListSkeleton from "../../components/story-list-skeleton";
 import MapHandler from "../../utils/map-handler";
 import DatabaseHelper from "../../utils/database-helper";
 import NotificationHelper from "../../utils/notification-helper";
-import LoadingSpinner from "../../components/loading-spinner";
 import AnimationObserver from "../../utils/animation-observer";
+import Swal from "sweetalert2";
 
 export default class HomePage {
   constructor() {
     this.presenter = new HomePresenter(this);
     this.mapHandler = null;
-    this.stories = []; // ✅ [BARU] Master list dari API
-    this.renderedStories = []; // ✅ [BARU] List yang sudah difilter/sort
+    this.stories = [];
+    this.renderedStories = [];
     this._animationObserver = new AnimationObserver({
       rootMargin: "0px 0px -100px 0px",
       threshold: 0.1,
@@ -23,6 +21,7 @@ export default class HomePage {
     });
     this._scrollListener = null;
     this._isLoading = false;
+    this._currentUser = authGuard.getCurrentUser();
   }
 
   async render() {
@@ -80,46 +79,43 @@ export default class HomePage {
     this.mapHandler = new MapHandler("map");
     this.mapHandler.init();
 
-    // Setup listener UI DULU
     document.getElementById("refresh-button").addEventListener("click", () => {
       this._loadStories();
     });
-    document.getElementById("search-story").addEventListener("input", (e) => {
-      // Gunakan debounce agar tidak lag saat mengetik
+    document.getElementById("search-story").addEventListener("input", () => {
       this._debounce(this._updateDisplayedStories, 500)();
     });
-    document.getElementById("sort-story").addEventListener("change", (e) => {
+    document.getElementById("sort-story").addEventListener("change", () => {
       this._updateDisplayedStories();
     });
 
-    // Setup listener lainnya
     this._setupScrollListener();
     this._setupScrollAnimations();
 
-    // Muat data awal
     await this._loadStories();
   }
 
-  /**
-   * ✅ [DIPERBARUI] Memuat SEMUA cerita dari presenter
-   */
   async _loadStories() {
     if (this._isLoading) return;
     this._isLoading = true;
-    this.showLoading(); // Tampilkan skeleton
+    this.showLoading();
 
     try {
-      // Panggil presenter untuk mengambil (misal) 100 cerita terbaru
-      // Kita asumsikan 100 adalah "semua" untuk filtering
       const result = await this.presenter.loadStories({
         page: 1,
-        size: 100, // Ambil 100 cerita
+        size: 100,
         location: 1,
       });
 
       if (result.success) {
-        this.stories = result.data || []; // Simpan ke master list
-        this._updateDisplayedStories(); // Terapkan filter/sort default
+        // ✅ Filter hidden stories
+        let stories = result.data || [];
+        const hiddenStories = await DatabaseHelper.getAllHiddenStories();
+        const hiddenIds = hiddenStories.map((h) => h.id);
+        stories = stories.filter((story) => !hiddenIds.includes(story.id));
+
+        this.stories = stories;
+        this._updateDisplayedStories();
       } else {
         this.showError(result.message);
       }
@@ -127,15 +123,10 @@ export default class HomePage {
       this.showError(error.message);
     } finally {
       this._isLoading = false;
-      // hideLoading() tidak diperlukan, displayStories akan mengganti skeleton
     }
   }
 
-  /**
-   * ✅ [BARU] Fungsi pusat untuk filter, sort, dan re-render
-   */
   _updateDisplayedStories() {
-    // Ambil nilai saat ini dari UI
     const currentSearchTerm = (
       document.getElementById("search-story")?.value ?? ""
     ).toLowerCase();
@@ -144,7 +135,6 @@ export default class HomePage {
 
     let storiesToRender = [...this.stories];
 
-    // 1. Terapkan Filter (Search)
     if (currentSearchTerm) {
       storiesToRender = storiesToRender.filter(
         (story) =>
@@ -153,13 +143,11 @@ export default class HomePage {
       );
     }
 
-    // 2. Terapkan Sort
     if (currentSortValue === "oldest") {
       storiesToRender.sort(
         (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
       );
     } else {
-      // Default ke "newest"
       storiesToRender.sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       );
@@ -167,7 +155,6 @@ export default class HomePage {
 
     this.renderedStories = storiesToRender;
 
-    // 3. Re-render list dan map
     this.displayStories(this.renderedStories);
     this.displayMap(this.renderedStories);
   }
@@ -179,25 +166,46 @@ export default class HomePage {
     }
   }
 
-  hideLoading() {
-    // Tidak perlu, displayStories akan mengganti skeleton
-  }
+  hideLoading() {}
 
-  // displayStories (Merender list yang sudah difilter/sort)
   displayStories(stories) {
     const container = document.getElementById("stories-container");
     if (!container) return;
 
-    container.innerHTML = StoryList.render(stories); // StoryList akan handle empty state
+    container.innerHTML = StoryList.render(stories);
+
+    // Inject delete button untuk story milik user
+    stories.forEach((story) => {
+      if (story.name === this._currentUser?.name) {
+        const card = container.querySelector(`[data-story-id="${story.id}"]`);
+        if (card) {
+          const actionsDiv = card.querySelector(".story-card-actions");
+          if (actionsDiv && !actionsDiv.querySelector(".btn-delete")) {
+            actionsDiv.insertAdjacentHTML(
+              "beforeend",
+              `
+              <button 
+                class="btn-delete" 
+                aria-label="Hapus cerita" 
+                title="Hapus cerita"
+                data-story-id="${story.id}"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+              </button>
+            `
+            );
+          }
+        }
+      }
+    });
+
     this._setupAfterRenderBatch();
   }
 
-  /**
-   * ✅ [BARU] Fungsi helper untuk setup listeners setelah render
-   */
   _setupAfterRenderBatch() {
     this._setupCardInteractionEvents();
     this._setupFavoriteButtonListeners();
+    this._setupDeleteButtonListeners();
     setTimeout(() => {
       if (this._animationObserver) {
         this._animationObserver.observeAll(".story-card");
@@ -247,7 +255,10 @@ export default class HomePage {
       const href = card.dataset.href;
 
       const handleCardClick = (e) => {
-        if (e.target.closest(".btn-favorite")) {
+        if (
+          e.target.closest(".btn-favorite") ||
+          e.target.closest(".btn-delete")
+        ) {
           return;
         }
         if (href) {
@@ -269,15 +280,6 @@ export default class HomePage {
           this.mapHandler.highlightMarker(storyId);
         }
       });
-
-      card.addEventListener("focus", () => {
-        card.style.outline = "2px solid var(--border-focus)";
-        card.style.outlineOffset = "2px";
-      });
-
-      card.addEventListener("blur", () => {
-        card.style.outline = "none";
-      });
     });
   }
 
@@ -285,10 +287,7 @@ export default class HomePage {
     const container = document.getElementById("home-page-container");
     const heroElement = document.querySelector(".home-hero");
 
-    if (!container || !heroElement) {
-      console.warn("⚠️ Container atau hero element tidak ditemukan");
-      return;
-    }
+    if (!container || !heroElement) return;
 
     const triggerHeight = heroElement.offsetHeight;
 
@@ -318,13 +317,8 @@ export default class HomePage {
 
       if (favoriteIds.includes(storyId)) {
         button.classList.add("favorited");
-        button.setAttribute(
-          "aria-label",
-          `Remove story ${storyId} from favorites`
-        );
       } else {
         button.classList.remove("favorited");
-        button.setAttribute("aria-label", `Save story ${storyId} to favorites`);
       }
 
       button.addEventListener("click", async (event) => {
@@ -333,37 +327,60 @@ export default class HomePage {
 
         const isFavorited = button.classList.contains("favorited");
 
-        // Ambil data cerita dari master list
         const storyData = this.stories.find((story) => story.id === storyId);
-        if (!storyData) {
-          NotificationHelper.showError("Gagal menemukan data cerita.");
-          return;
-        }
+        if (!storyData) return;
 
         if (isFavorited) {
           await DatabaseHelper.deleteFavoriteStory(storyId);
           button.classList.remove("favorited");
-          button.setAttribute(
-            "aria-label",
-            `Save story ${storyId} to favorites`
-          );
           NotificationHelper.showToast("Cerita dihapus dari favorit", "info");
         } else {
           await DatabaseHelper.putFavoriteStory(storyData);
           button.classList.add("favorited");
-          button.setAttribute(
-            "aria-label",
-            `Remove story ${storyId} from favorites`
-          );
           NotificationHelper.showToast("Cerita disimpan ke favorit");
         }
       });
+    });
+  }
 
-      button.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          e.stopPropagation();
-          button.click();
+  _setupDeleteButtonListeners() {
+    const container = document.getElementById("stories-container");
+    if (!container) return;
+
+    const buttons = container.querySelectorAll(".btn-delete");
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", async (event) => {
+        event.stopPropagation();
+        event.preventDefault();
+
+        const storyId = button.dataset.storyId;
+
+        const result = await Swal.fire({
+          title: "Sembunyikan Cerita?",
+          text: "Cerita akan disembunyikan dari semua daftar Anda",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#d33",
+          cancelButtonColor: "#3085d6",
+          confirmButtonText: "Ya, Sembunyikan!",
+          cancelButtonText: "Batal",
+        });
+
+        if (result.isConfirmed) {
+          try {
+            await DatabaseHelper.hideStory(storyId);
+            await DatabaseHelper.deleteFavoriteStory(storyId);
+
+            NotificationHelper.showToast(
+              "Cerita berhasil disembunyikan",
+              "success"
+            );
+
+            await this._loadStories();
+          } catch (error) {
+            NotificationHelper.showError("Gagal menyembunyikan cerita");
+          }
         }
       });
     });
@@ -391,9 +408,6 @@ export default class HomePage {
     }, 50);
   }
 
-  /**
-   * ✅ [BARU] Helper untuk debounce search input
-   */
   _debounce(func, delay) {
     let timeout;
     return (...args) => {
@@ -405,8 +419,6 @@ export default class HomePage {
   }
 
   async destroy() {
-    console.log("🧹 Membersihkan HomePage...");
-
     if (this._scrollListener) {
       window.removeEventListener("scroll", this._scrollListener);
       this._scrollListener = null;
@@ -419,15 +431,5 @@ export default class HomePage {
       this._animationObserver.disconnect();
       this._animationObserver = null;
     }
-
-    // Hapus sisa listener
-    const searchInput = document.getElementById("search-story");
-    if (searchInput) searchInput.removeEventListener("input", this._debounce);
-
-    const sortInput = document.getElementById("sort-story");
-    if (sortInput)
-      sortInput.removeEventListener("change", this._updateDisplayedStories);
-
-    console.log("✅ HomePage berhasil dibersihkan");
   }
 }

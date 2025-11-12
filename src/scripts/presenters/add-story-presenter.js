@@ -1,9 +1,9 @@
-// src/scripts/presenters/add-story-presenter.js (KODE LENGKAP DIPERBARUI)
+// src/scripts/presenters/add-story-presenter.js (VERSI DIPERBAIKI)
 
 import storyModel from "../models/story-model";
 import DatabaseHelper from "../utils/database-helper";
 import authRepository from "../data/auth-repository";
-import authModel from "../models/auth-model"; // <-- 1. IMPORT BARU
+import authModel from "../models/auth-model";
 
 class AddStoryPresenter {
   constructor(view) {
@@ -14,7 +14,7 @@ class AddStoryPresenter {
   async handleAddStory(storyData) {
     this.view.showLoading();
 
-    // 1. Generate ID untuk IndexedDB
+    // 1. Generate ID untuk IndexedDB (jika nanti offline)
     const storyId = Date.now().toString();
     storyData.id = storyId;
 
@@ -28,7 +28,7 @@ class AddStoryPresenter {
     }
 
     try {
-      // 3. Coba kirim ke API dulu (ONLINE PATH)
+      // 3. Coba kirim ke API (ONLINE PATH)
       const result = await this.storyModel.addStory(formData);
 
       this.view.hideLoading();
@@ -39,41 +39,49 @@ class AddStoryPresenter {
           window.location.hash = "#/";
         }, 1500);
       } else {
-        // Ini seharusnya tidak terjadi jika repository melempar error
+        // Fallback jika repository return { success: false }
         this.view.showError(result.message || "Gagal menambahkan cerita.");
       }
     } catch (error) {
-      // 4. ✅ [DIPERBARUI] BLOK CATCH YANG LEBIH CERDAS
+      // 4. ✅ PERBAIKAN: Deteksi error dengan lebih akurat
       this.view.hideLoading();
 
-      // Cek apakah ini error jaringan (offline sungguhan)
-      const isOffline =
-        error instanceof TypeError && error.message === "Failed to fetch";
-      // Cek apakah ini error autentikasi
-      const isAuthError =
-        error.message.includes("authentication") ||
-        error.message.includes("Unauthorized") ||
-        error.message.includes("401");
+      console.error("❌ Gagal menambah cerita:", error.message);
 
-      if (isOffline) {
-        // --- INI LOGIKA OFFLINE YANG BENAR ---
-        console.warn("📡 Offline mode detected:", error.message);
+      // --- Cek apakah ini error OFFLINE (jaringan) ---
+      const isNetworkError =
+        error instanceof TypeError ||
+        error.message === "Failed to fetch" ||
+        error.message.includes("NetworkError") ||
+        error.message.includes("fetch");
+
+      // --- Cek apakah ini error AUTENTIKASI (401/403) ---
+      const isAuthError =
+        error.message.includes("Unauthorized") ||
+        error.message.includes("authentication") ||
+        error.message.includes("401") ||
+        error.message.includes("403") ||
+        error.message.includes("token");
+
+      if (isNetworkError && !isAuthError) {
+        // ========== OFFLINE MODE ==========
+        console.warn("📡 Mode offline terdeteksi");
 
         const token = authRepository.getToken();
         if (!token) {
-          console.error("❌ Tidak ada token, tidak bisa menyimpan ke outbox.");
+          console.error("❌ Tidak ada token untuk menyimpan offline");
           this.view.showError(
             "Anda harus login untuk menyimpan cerita offline."
           );
           return;
         }
 
-        storyData.token = token; // Tambahkan token ke data outbox
+        storyData.token = token; // Tambahkan token untuk sync nanti
 
         try {
           await DatabaseHelper.putOutboxStory(storyData);
           this.view.showSuccess(
-            "Kamu sedang offline. Cerita akan otomatis diunggah saat online kembali! 📤"
+            "📤 Kamu sedang offline. Cerita akan otomatis diunggah saat online kembali!"
           );
           setTimeout(() => {
             window.location.hash = "#/";
@@ -81,23 +89,27 @@ class AddStoryPresenter {
         } catch (dbError) {
           console.error("❌ Gagal menyimpan ke IndexedDB:", dbError);
           this.view.showError(
-            "Gagal menyimpan cerita. Pastikan browser mendukung IndexedDB."
+            "Gagal menyimpan cerita. Pastikan browser mendukung penyimpanan lokal."
           );
         }
       } else if (isAuthError) {
-        // --- INI LOGIKA ERROR AUTENTIKASI (401) ---
-        console.error("❌ Authentication error:", error.message);
-        this.view.showError("Sesi Anda telah habis. Silakan login kembali.");
+        // ========== AUTHENTICATION ERROR ==========
+        console.error("❌ Error autentikasi:", error.message);
+        this.view.showError(
+          "Sesi Anda telah habis atau token tidak valid. Silakan login kembali."
+        );
 
-        // Hapus sisa token/user dan paksa ke halaman login
+        // Hapus token dan redirect ke login
         setTimeout(() => {
-          authModel.logout(); // Panggil logout dari model
+          authModel.logout();
           window.location.hash = "#/login";
         }, 2000);
       } else {
-        // --- UNTUK ERROR LAINNYA (Misal: 500, 400) ---
-        console.error("❌ Gagal menambah cerita (Error Lain):", error.message);
-        this.view.showError(error.message || "Gagal menambahkan cerita.");
+        // ========== ERROR LAINNYA (400, 500, dsb) ==========
+        console.error("❌ Error dari server:", error.message);
+        this.view.showError(
+          error.message || "Gagal menambahkan cerita. Coba lagi nanti."
+        );
       }
     }
   }

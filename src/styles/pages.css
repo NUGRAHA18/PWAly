@@ -391,18 +391,6 @@ a.story-card:hover {
     display: block;
 }
 
-.camera-controls {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: var(--spacing-lg);
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
-    display: flex;
-    justify-content: center;
-    gap: var(--spacing-md);
-}
-
 .camera-button {
     padding: var(--spacing-sm) var(--spacing-lg);
     background-color: rgba(255, 255, 255, 0.9);

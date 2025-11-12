@@ -1,0 +1,87 @@
+/* Story Card Actions Container */
+.story-card-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Base Button Styles untuk Favorite dan Delete */
+.btn-favorite,
+.btn-delete {
+    padding: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+.btn-favorite:hover,
+.btn-delete:hover {
+    background: var(--bg-secondary);
+    transform: scale(1.1);
+}
+
+.btn-favorite:active,
+.btn-delete:active {
+    transform: scale(0.95);
+}
+
+/* Favorite Button Specific */
+.btn-favorite.favorited {
+    color: var(--color-primary);
+}
+
+.btn-favorite.favorited svg {
+    fill: currentColor;
+}
+
+/* Delete Button Specific */
+.btn-delete {
+    color: var(--text-secondary);
+}
+
+.btn-delete:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .story-card-actions {
+        gap: 4px;
+    }
+
+    .btn-favorite,
+    .btn-delete {
+        padding: 6px;
+    }
+
+    .btn-favorite svg,
+    .btn-delete svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+/* Focus States untuk Accessibility */
+.btn-favorite:focus,
+.btn-delete:focus {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+}
+
+/* Loading State untuk Delete Button */
+.btn-delete[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-delete[disabled]:hover {
+    background: transparent;
+    transform: none;
+}

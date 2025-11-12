@@ -88,7 +88,7 @@ export default class AddStoryPage {
             </div>
           </div>
 
-          <div class="form-section">
+          <div class="form-section hide-on-camera">
             <h2 class="form-section-title">📍 Location (Optional)</h2>
             <p class="form-help mb-md">Click on the map to set the story location.</p>
             <div class="location-picker">
@@ -241,6 +241,7 @@ export default class AddStoryPage {
       cameraError.style.display = "none";
       cameraError.textContent = "";
       this._updatePhotoUIState("camera");
+      document.body.classList.add("camera-active");
 
       try {
         this._activeStream = await this._cameraHandler.startCamera(
@@ -254,6 +255,7 @@ export default class AddStoryPage {
         cameraError.style.display = "block";
 
         this._updatePhotoUIState("options");
+        document.body.classList.remove("camera-active");
       }
     });
 
@@ -261,6 +263,7 @@ export default class AddStoryPage {
       this._cameraHandler.stopCamera();
       this._activeStream = null;
       this._updatePhotoUIState("upload");
+      document.body.classList.remove("camera-active");
     });
 
     captureButton.addEventListener("click", async () => {
@@ -277,6 +280,7 @@ export default class AddStoryPage {
           this._cameraHandler.stopCamera();
           this._activeStream = null;
           this._updatePhotoUIState();
+          document.body.classList.remove("camera-active");
         }
       } catch (error) {
         console.error("Capture failed:", error);
@@ -293,6 +297,7 @@ export default class AddStoryPage {
       this._cameraHandler.stopCamera();
       this._activeStream = null;
       this._updatePhotoUIState("options");
+      document.body.classList.remove("camera-active");
     });
 
     const removeButton = document.getElementById("remove-image-button");
@@ -371,6 +376,7 @@ export default class AddStoryPage {
     this._cameraHandler.stopCamera();
     this._activeStream = null;
     this._photoFile = null;
+    document.body.classList.remove("camera-active");
 
     const input = document.getElementById("photo");
     if (input) input.value = "";
@@ -458,6 +464,7 @@ export default class AddStoryPage {
     }
     this._cameraHandler.stopCamera();
     this._activeStream = null;
+    document.body.classList.remove("camera-active");
     console.log("AddStoryPage destroyed, resources cleaned up.");
   }
 }

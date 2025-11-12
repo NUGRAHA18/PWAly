@@ -84,15 +84,26 @@ class StoryRepository {
     try {
       const token = authRepository.getToken();
 
+      if (!token) {
+        throw new Error("Missing authentication token. Please login again.");
+      }
+
       const response = await fetch(`${this.baseUrl}/v1/stories`, {
         method: "POST",
-        headers: {},
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.message || "Gagal menambahkan cerita";
+
+        if (response.status === 401) {
+          throw new Error("Unauthorized: " + errorMessage);
+        }
+
         throw new Error(errorMessage);
       }
 
@@ -109,6 +120,55 @@ class StoryRepository {
       };
     } catch (error) {
       console.error("Add story error:", error);
+      throw error;
+    }
+  }
+
+  async deleteStory(id) {
+    try {
+      const token = authRepository.getToken();
+
+      if (!token) {
+        throw new Error("Missing authentication token. Please login again.");
+      }
+
+      const response = await fetch(`${this.baseUrl}/v1/stories/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.message || "Gagal menghapus cerita";
+
+        if (response.status === 401) {
+          throw new Error("Unauthorized: " + errorMessage);
+        }
+
+        if (response.status === 403) {
+          throw new Error(
+            "Anda tidak memiliki izin untuk menghapus cerita ini"
+          );
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Invalid response format");
+      }
+
+      const data = await response.json();
+
+      return {
+        success: true,
+        message: data.message || "Cerita berhasil dihapus",
+      };
+    } catch (error) {
+      console.error("Delete story error:", error);
       throw error;
     }
   }

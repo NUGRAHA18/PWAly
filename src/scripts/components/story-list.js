@@ -1,7 +1,7 @@
 import StoryCard from "./story-card";
 
 class StoryList {
-  static render(stories) {
+  static render(stories, options = {}) {
     if (!stories || stories.length === 0) {
       return `
         <div class="empty-state">
@@ -17,7 +17,7 @@ class StoryList {
 
     return `
       <div class="stories-grid">
-        ${stories.map((story) => StoryCard.render(story)).join("")}
+        ${stories.map((story) => StoryCard.render(story, options)).join("")}
       </div>
     `;
   }

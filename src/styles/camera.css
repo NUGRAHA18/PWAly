@@ -1,0 +1,42 @@
+/* Camera Area Fix */
+#camera-area {
+    width: 100%;
+}
+
+.camera-container {
+    position: relative;
+    width: 100%;
+    min-height: 400px;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#camera-preview {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    display: block;
+    background: #000;
+}
+
+#camera-error {
+    padding: 16px;
+    margin-top: 8px;
+}
+
+.camera-controls {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+/* Hide location section saat camera active */
+.form-section.hide-on-camera {
+    display: block;
+}
+
+body.camera-active .hide-on-camera {
+    display: none;
+}

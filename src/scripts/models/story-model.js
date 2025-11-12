@@ -12,6 +12,10 @@ class StoryModel {
   async addStory(formData) {
     return await storyRepository.addStory(formData);
   }
+
+  async deleteStory(id) {
+    return await storyRepository.deleteStory(id);
+  }
 }
 
 export default new StoryModel();
