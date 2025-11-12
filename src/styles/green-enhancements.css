@@ -960,7 +960,7 @@ header::before {
 /* Progress bar container */
 .scroll-progress {
     position: fixed;
-    top: 60px;
+    top: 80px;
     /* Di bawah header */
     left: 0;
     width: 100%;
@@ -970,7 +970,6 @@ header::before {
     pointer-events: none;
 }
 
-/* Progress bar fill */
 .scroll-progress-bar {
     height: 100%;
     background: var(--gradient-accent);
@@ -979,16 +978,12 @@ header::before {
     box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
 }
 
-/* Mobile adjustment */
 @media (max-width: 768px) {
     .scroll-progress {
         top: 56px;
     }
 }
 
-/* ============================================
-   ⬆️ SCROLL TO TOP BUTTON
-   ============================================ */
 
 .scroll-to-top {
     position: fixed;
