@@ -72,11 +72,9 @@ const PushNotificationHelper = {
       const registration = await navigator.serviceWorker.ready;
       console.log("✅ Service Worker ready");
 
-      // Cek subscription lama
       let subscription = await registration.pushManager.getSubscription();
 
       if (!subscription) {
-        // Subscribe baru
         const vapidPublicKey = CONFIG.PUSH_NOTIFICATION_VAPID_PUBLIC_KEY;
         const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
 
@@ -89,7 +87,6 @@ const PushNotificationHelper = {
         console.log("✅ Browser subscription success!");
       }
 
-      // ✅ KIRIM KE API DICODING
       const token = authRepository.getToken();
       if (!token) {
         NotificationHelper.showToast(
@@ -173,7 +170,6 @@ const PushNotificationHelper = {
         return false;
       }
 
-      // ✅ UNSUBSCRIBE DARI API DICODING
       const token = authRepository.getToken();
       if (token) {
         const subscriptionJSON = subscription.toJSON();
@@ -198,7 +194,6 @@ const PushNotificationHelper = {
         }
       }
 
-      // Unsubscribe dari browser
       const success = await subscription.unsubscribe();
 
       if (success) {
@@ -255,12 +250,19 @@ const PushNotificationHelper = {
 
     const isSubscribed = await this.isSubscribed();
 
+    // ✅ UPDATE: Gunakan .toggle-icon element
+    const icon = button.querySelector(".toggle-icon");
+    if (icon) {
+      icon.textContent = isSubscribed ? "🔔" : "🔕";
+    } else {
+      // Fallback jika struktur lama
+      button.textContent = isSubscribed ? "🔔" : "🔕";
+    }
+
     if (isSubscribed) {
-      button.textContent = "🔔";
       button.title = "Notifikasi Aktif (klik untuk nonaktifkan)";
       button.setAttribute("aria-label", "Matikan notifikasi");
     } else {
-      button.textContent = "🔕";
       button.title = "Notifikasi Nonaktif (klik untuk aktifkan)";
       button.setAttribute("aria-label", "Nyalakan notifikasi");
     }

@@ -21,12 +21,24 @@ class ThemeHandler {
   _updateThemeButton() {
     const themeButton = document.getElementById("theme-toggle");
     if (themeButton) {
-      themeButton.textContent = this.currentTheme === "dark" ? "☀️" : "🌙";
+      const icon = themeButton.querySelector(".toggle-icon");
+      if (icon) {
+        icon.textContent = this.currentTheme === "dark" ? "☀️" : "🌙";
+      } else {
+        // Fallback jika struktur lama
+        themeButton.textContent = this.currentTheme === "dark" ? "☀️" : "🌙";
+      }
+
       themeButton.setAttribute(
         "aria-label",
         this.currentTheme === "dark"
           ? "Switch to light theme"
           : "Switch to dark theme"
+      );
+
+      themeButton.setAttribute(
+        "title",
+        this.currentTheme === "dark" ? "Mode Terang" : "Mode Gelap"
       );
     }
   }

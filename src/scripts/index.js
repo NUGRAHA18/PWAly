@@ -5,6 +5,7 @@ import "../styles/styles.css";
 import App from "./pages/app";
 import ThemeHandler from "./utils/theme-handler";
 import PushNotificationHelper from "./utils/push-notification-helper";
+import authGuard from "./utils/auth-guard";
 
 const registerServiceWorker = async () => {
   if (!("serviceWorker" in navigator)) {
@@ -83,6 +84,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (window.matchMedia("(display-mode: standalone)").matches) {
       installButton.style.display = "none";
     }
+  }
+
+  // ✅ AUTO REDIRECT KE LOGIN
+  const currentHash = window.location.hash || "#/";
+  const publicPages = ["#/login", "#/register", "#/about"];
+  const isPublicPage = publicPages.some((page) => currentHash.startsWith(page));
+
+  if (!authGuard.isAuthenticated() && !isPublicPage) {
+    window.location.hash = "#/login";
   }
 
   const app = new App({

@@ -1,30 +1,15 @@
-// src/service-worker.js (KODE LENGKAP & SUDAH DIPERBAIKI)
-
 import { precacheAndRoute } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
 import { StaleWhileRevalidate, CacheFirst } from "workbox-strategies";
 import { ExpirationPlugin } from "workbox-expiration";
 import { clientsClaim } from "workbox-core";
 import { CacheableResponsePlugin } from "workbox-cacheable-response";
-
-// --- 👇 1. TAMBAHKAN IMPORT DATABASE HELPER ---
 import DatabaseHelper from "./scripts/utils/database-helper";
-// --- 👆 BATAS TAMBAHAN ---
 
 self.skipWaiting();
 clientsClaim();
-
-// ... (Kode Caching (precacheAndRoute, registerRoute) tetap sama) ...
-// ==========================================================
-// 1. PRECATCHING (Aset dari Webpack)
-// ==========================================================
 precacheAndRoute(self.__WB_MANIFEST);
 
-// ==========================================================
-// 2. STRATEGI CACHING (DI TOP-LEVEL)
-// ==========================================================
-
-// Cache untuk API Dicoding
 registerRoute(
   ({ url }) =>
     url.origin === "https://story-api.dicoding.dev" &&
@@ -52,13 +37,6 @@ registerRoute(
   })
 );
 
-// ==========================================================
-// 3. BACKGROUND SYNC HANDLER (DI TOP-LEVEL)
-// ==========================================================
-
-/**
- * ✅ [BARU] Helper function untuk mengirim satu cerita ke API
- */
 async function sendStory(story) {
   try {
     const token = story.token;
@@ -66,7 +44,6 @@ async function sendStory(story) {
       throw new Error("Token tidak ditemukan di data outbox. Hapus item.");
     }
 
-    // Buat ulang FormData dari data IndexedDB
     const formData = new FormData();
     formData.append("description", story.description);
     formData.append("photo", story.photo, story.photo.name);
@@ -75,7 +52,6 @@ async function sendStory(story) {
       formData.append("lon", story.lon);
     }
 
-    // Kirim ke API (Gunakan URL produksi lengkap, karena proxy tidak ada di SW)
     const response = await fetch("https://story-api.dicoding.dev/v1/stories", {
       method: "POST",
       headers: {
@@ -87,7 +63,6 @@ async function sendStory(story) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      // Jika error 401 (Token kadaluarsa), hapus saja agar tidak dicoba lagi
       if (response.status === 401) {
         console.error("Token kadaluarsa untuk story", story.id);
         await DatabaseHelper.deleteOutboxStory(story.id);
@@ -96,25 +71,20 @@ async function sendStory(story) {
       throw new Error(errorData.message || "Gagal sinkronisasi");
     }
 
-    // Jika sukses kirim, hapus dari outbox
     await DatabaseHelper.deleteOutboxStory(story.id);
     console.log("✅ Cerita berhasil disinkronkan:", story.id);
     return true; // Sukses
   } catch (error) {
     console.error("❌ Gagal sinkronisasi cerita:", story.id, error);
 
-    // Jika error karena token tidak ada, hapus item
     if (error.message.includes("Token tidak ditemukan")) {
       await DatabaseHelper.deleteOutboxStory(story.id);
     }
 
-    return false; // Gagal (akan dicoba lagi nanti)
+    return false;
   }
 }
 
-/**
- * ✅ [DIPERBAIKI] Fungsi utama untuk memproses antrian
- */
 async function processOutboxQueue() {
   console.log("🔄 Memproses antrian outbox...");
 
@@ -124,7 +94,6 @@ async function processOutboxQueue() {
     return;
   }
 
-  // Kirim semua cerita secara paralel dan tunggu hasilnya
   const results = await Promise.all(stories.map(sendStory));
 
   const successCount = results.filter(Boolean).length;
@@ -134,14 +103,12 @@ async function processOutboxQueue() {
     } gagal.`
   );
 
-  // Jika setidaknya satu berhasil, kirim pesan ke client (jika terbuka)
   if (successCount > 0) {
     const clients = await self.clients.matchAll({
       includeUncontrolled: true,
       type: "window",
     });
 
-    // Kirim pesan ke semua tab yang terbuka
     clients.forEach((client) => {
       client.postMessage({ type: "SYNC_SUCCESS" });
     });
@@ -155,10 +122,6 @@ self.addEventListener("sync", (event) => {
   }
 });
 
-// ... (Sisa file: Push Notification dan Notification Click handler tetap sama) ...
-// ==========================================================
-// 4. PUSH NOTIFICATION HANDLER (DI TOP-LEVEL)
-// ==========================================================
 self.addEventListener("push", (event) => {
   console.log("🔔 Service Worker: Push Notification diterima");
   // ... (sisa kode push handler)
@@ -188,7 +151,6 @@ self.addEventListener("push", (event) => {
     },
   };
 
-  // Parse payload dengan aman (mendukung JSON dan text)
   let payload = null;
   if (event.data) {
     try {
@@ -206,7 +168,6 @@ self.addEventListener("push", (event) => {
     }
   }
 
-  // Buat notification dengan data dari payload atau default
   const title = payload?.title ?? defaultNotification.title;
   const options = {
     ...defaultNotification.options,
@@ -227,9 +188,6 @@ self.addEventListener("push", (event) => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// ==========================================================
-// 5. NOTIFICATION CLICK HANDLER (DI TOP-LEVEL)
-// ==========================================================
 self.addEventListener("notificationclick", (event) => {
   console.log("👆 Notification clicked:", event.action);
   // ... (sisa kode notification click handler)

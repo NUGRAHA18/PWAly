@@ -15,7 +15,7 @@ const routes = {
   "/about": new AboutPage(),
   "/favorites": new FavoritePage(),
   "/my-stories": new MyStoriesPage(),
-  "/my-stories": new MyStoriesPage(),
   "/story/:id": new StoryDetailPage(),
 };
+
 export default routes;

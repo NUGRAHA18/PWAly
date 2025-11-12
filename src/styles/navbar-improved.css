@@ -124,7 +124,7 @@ header {
 .theme-toggle:hover {
     background: var(--bg-secondary);
     border-color: var(--color-primary);
-    transform: translateY(-1px);
+
 }
 
 .theme-toggle:active {

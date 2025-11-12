@@ -449,10 +449,6 @@ header::before {
     transition: all 0.3s ease;
 }
 
-.theme-toggle:hover {
-    background: rgba(16, 185, 129, 0.1);
-    transform: rotate(15deg) scale(1.1);
-}
 
 /* Progress Bar (untuk future use) */
 .progress-bar {

@@ -1,0 +1,119 @@
+/* ===== TOGGLE BUTTON FIXES ===== */
+
+/* Desktop: Hide labels, show only icons */
+.theme-toggle {
+    padding: 0.5rem 0.6rem;
+    background: transparent;
+    border: 1px solid var(--border-primary);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.toggle-icon {
+    display: inline-flex;
+    font-size: 1.2rem;
+}
+
+.toggle-label {
+    display: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.theme-toggle:hover {
+    background: var(--bg-secondary);
+    border-color: var(--color-primary);
+}
+
+.theme-toggle:active {
+    transform: translateY(0);
+}
+
+/* Mobile: Show labels next to icons */
+@media (max-width: 768px) {
+    .nav-toggle-item {
+        width: 100%;
+    }
+
+    .theme-toggle {
+        margin: 0.25rem 1.5rem;
+        width: calc(100% - 3rem);
+        justify-content: flex-start;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-primary);
+        /* ✅ Fix border */
+        border-radius: 6px;
+        /* ✅ Fix border radius */
+        border-left: 3px solid transparent;
+        gap: 0.75rem;
+    }
+
+    .toggle-label {
+        display: inline-block;
+    }
+
+    .toggle-icon {
+        font-size: 1.1rem;
+    }
+
+    .theme-toggle:hover {
+        background: var(--bg-secondary);
+        border-left-color: var(--color-primary);
+
+    }
+}
+
+/* ===== DRAWER BUTTON FIX ===== */
+.drawer-button {
+    display: none;
+    padding: 0.5rem 0.6rem;
+    background: transparent;
+    border: 1px solid var(--border-primary);
+    /* ✅ Fix border */
+    border-radius: 6px;
+    /* ✅ Fix border radius */
+    cursor: pointer;
+    font-size: 1.5rem;
+    transition: all 0.2s ease;
+    color: var(--text-primary);
+    width: auto;
+    height: auto;
+}
+
+.drawer-button:hover {
+    background: var(--bg-secondary);
+    border-color: var(--color-primary);
+    transform: none;
+    /* ✅ Tidak ada transform untuk prevent skew */
+}
+
+.drawer-button:active {
+    transform: scale(0.98);
+}
+
+@media (max-width: 768px) {
+    .drawer-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* ===== NAV TOGGLE ITEM (untuk consistency) ===== */
+.nav-toggle-item {
+    list-style: none;
+}
+
+@media (min-width: 769px) {
+    .nav-toggle-item {
+        display: inline-flex;
+    }
+}
