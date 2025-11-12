@@ -8,7 +8,7 @@ class StoryCard {
     return `
       <article
         class="story-card"
-        href="#/story/${story.id}"
+        data-href="#/story/${story.id}"
         data-story-id="${story.id}"
         data-lat="${story.lat || ""}"
         data-lon="${story.lon || ""}"

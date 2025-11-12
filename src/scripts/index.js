@@ -6,34 +6,48 @@ import App from "./pages/app";
 import ThemeHandler from "./utils/theme-handler";
 import PushNotificationHelper from "./utils/push-notification-helper";
 
-// Fungsi untuk mendaftarkan Service Worker
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
     try {
       const registration = await navigator.serviceWorker.register(
-        "./service-worker.js"
+        "/service-worker.js"
       );
       console.log("✅ Service Worker registered:", registration);
 
-      // ✅ TAMBAHAN: Listen untuk message dari Service Worker
-      navigator.serviceWorker.addEventListener("message", async (event) => {
-        console.log("📨 Pesan dari Service Worker:", event.data);
+      // Tunggu sampai Service Worker siap
+      const readyRegistration = await navigator.serviceWorker.ready;
 
-        if (event.data && event.data.type === "SYNC_SUCCESS") {
-          console.log("✅ Background sync berhasil!");
+      // 🔄 Pastikan listener pesan aktif setelah SW siap
+      readyRegistration.active &&
+        navigator.serviceWorker.addEventListener("message", async (event) => {
+          console.log("📨 Pesan dari Service Worker:", event.data);
 
-          // Optional: Tampilkan notifikasi ke user
-          if (Notification.permission === "granted") {
-            new Notification("Cerita Berhasil Diunggah! 🎉", {
-              body: "Cerita yang tersimpan sudah berhasil diunggah ke server.",
-              icon: "favicon.png",
-            });
+          if (event.data && event.data.type === "SYNC_SUCCESS") {
+            console.log("✅ Background sync berhasil!");
+
+            if (Notification.permission === "granted") {
+              new Notification("Cerita Berhasil Diunggah! 🎉", {
+                body: "Cerita yang tersimpan sudah berhasil diunggah ke server.",
+                icon: "favicon.png",
+              });
+            } else {
+              // ✅ Gunakan fallback jika notifikasi diblokir
+              console.warn("🔕 Notifikasi diblokir oleh pengguna.");
+              import("sweetalert2").then(({ default: Swal }) => {
+                Swal.fire({
+                  icon: "success",
+                  title: "Cerita Berhasil Diunggah! 🎉",
+                  text: "Cerita yang tersimpan sudah berhasil diunggah ke server.",
+                  timer: 3000,
+                  showConfirmButton: false,
+                });
+              });
+            }
+
+            // Optional: reload halaman untuk memperbarui data
+            // window.location.reload();
           }
-
-          // Optional: Reload page untuk refresh data
-          // window.location.reload();
-        }
-      });
+        });
     } catch (error) {
       console.error("❌ Service Worker registration failed:", error);
     }
@@ -52,7 +66,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Event listener untuk tombol notifikasi
+  // Tombol toggle notifikasi
   const notificationToggle = document.getElementById("notification-toggle");
   if (notificationToggle) {
     notificationToggle.addEventListener("click", () => {
@@ -68,9 +82,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await app.renderPage();
 
-  // Panggil registrasi Service Worker
+  // Daftarkan SW
   await registerServiceWorker();
 
+  // Re-render halaman saat hash berubah (SPA)
   window.addEventListener("hashchange", async () => {
     if (document.startViewTransition) {
       document.startViewTransition(async () => {

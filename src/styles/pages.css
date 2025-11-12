@@ -87,6 +87,7 @@ a.story-card:hover {
 .story-detail-header {
     padding: var(--spacing-lg) var(--spacing-xl);
     border-bottom: 1px solid var(--border-primary);
+    view-transition-name: none;
 }
 
 .story-detail-author {

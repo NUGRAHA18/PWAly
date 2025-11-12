@@ -1,26 +1,22 @@
 // src/service-worker.js
 
-// --- 1. Impor semua modul Workbox ---
 import { precacheAndRoute } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
 import {
   StaleWhileRevalidate,
   CacheFirst,
   NetworkOnly,
-} from "workbox-strategies"; // ✅ TAMBAHKAN NetworkOnly
+} from "workbox-strategies";
 import { ExpirationPlugin } from "workbox-expiration";
 import { clientsClaim } from "workbox-core";
 import { BackgroundSyncPlugin } from "workbox-background-sync";
 
-// --- 2. Konfigurasi dasar Service Worker ---
 self.skipWaiting();
 clientsClaim();
 
-// --- 3. Caching App Shell (HANYA SATU KALI) ---
-// Workbox akan menyuntikkan daftar file (HTML, CSS, JS) di sini
 precacheAndRoute(self.__WB_MANIFEST);
 
-// --- 4. Caching Aset Eksternal (Leaflet) ---
+// External styles (Leaflet, Google Fonts)
 registerRoute(
   ({ request }) =>
     request.destination === "style" &&
@@ -46,10 +42,11 @@ registerRoute(
   })
 );
 
-// --- 5. Caching Dinamis untuk API (Menggunakan Path Lokal /v1/stories) ---
+// API stories (lokal)
 registerRoute(
   ({ url }) =>
-    url.origin === self.origin && url.pathname.startsWith("/v1/stories"),
+    url.origin === self.location.origin &&
+    url.pathname.startsWith("/v1/stories"),
   new StaleWhileRevalidate({
     cacheName: "dicoding-api-stories",
     plugins: [
@@ -58,7 +55,7 @@ registerRoute(
   })
 );
 
-// --- 6. Caching Dinamis untuk Gambar API ---
+// Gambar dari API
 registerRoute(
   ({ request }) =>
     request.destination === "image" &&
@@ -74,63 +71,58 @@ registerRoute(
   })
 );
 
-// --- 7. BACKGROUND SYNC PLUGIN (DIPERBAIKI) ---
+// Background Sync
 const bgSyncPlugin = new BackgroundSyncPlugin("story-outbox-queue", {
-  maxRetentionTime: 24 * 60, // Coba lagi selama 24 jam
+  maxRetentionTime: 24 * 60, // menit
   onSync: async ({ queue }) => {
     console.log("🔄 Service Worker: Background Sync dimulai...");
     let entry;
+    try {
+      while ((entry = await queue.shiftRequest())) {
+        try {
+          console.log("📤 Mencoba sync cerita:", entry.request.url);
+          const response = await fetch(entry.request);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          console.log("✅ Berhasil sync cerita!");
 
-    while ((entry = await queue.shiftRequest())) {
-      try {
-        console.log("📤 Mencoba sync cerita:", entry.request.url);
-
-        // Kirim request ke API
-        const response = await fetch(entry.request);
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        console.log("✅ Berhasil sync cerita!");
-
-        // ✅ PERBAIKAN: Kirim pesan ke client bahwa sync berhasil
-        const clients = await self.clients.matchAll();
-        clients.forEach((client) => {
-          client.postMessage({
-            type: "SYNC_SUCCESS",
-            message: "Cerita berhasil diunggah!",
+          const allClients = await self.clients.matchAll();
+          allClients.forEach((client) => {
+            client.postMessage({
+              type: "SYNC_SUCCESS",
+              message: "Cerita berhasil diunggah!",
+            });
           });
-        });
-      } catch (error) {
-        console.error("❌ Gagal sync cerita:", error);
-        // Kembalikan ke antrian untuk dicoba lagi nanti
-        await queue.unshiftRequest(entry);
-        throw error;
+        } catch (error) {
+          console.error("❌ Gagal sync cerita:", error);
+          // masukkan kembali ke antrian untuk dicoba nanti
+          await queue.unshiftRequest(entry);
+          throw error;
+        }
       }
+      console.log("🎉 Background Sync selesai!");
+    } catch (syncErr) {
+      console.error("Background sync loop error:", syncErr);
     }
-
-    console.log("🎉 Background Sync selesai!");
   },
 });
 
-// --- 8. REGISTER ROUTE UNTUK POST STORIES (DIPERBAIKI) ---
+// NetworkOnly untuk endpoint login/register (hanya POST)
 registerRoute(
   ({ url, request }) =>
-    url.origin === self.origin &&
-    url.pathname.startsWith("/v1/stories") &&
-    request.method === "POST", // ✅ Hanya POST request
-  new NetworkOnly({
-    // ✅ SEKARANG SUDAH DI-IMPORT
-    plugins: [bgSyncPlugin],
-  })
+    request.method === "POST" &&
+    url.origin === self.location.origin &&
+    (url.pathname.startsWith("/v1/login") ||
+      url.pathname.startsWith("/register")),
+  new NetworkOnly()
 );
 
-// --- 9. Logika Push Notification (HANYA SATU KALI) ---
+// SINGLE, ROBUST PUSH HANDLER (tidak duplikat)
 self.addEventListener("push", (event) => {
   console.log("🔔 Service Worker: Push Notification diterima");
 
-  let notificationData = {
+  const defaultNotification = {
     title: "StoryShare",
     options: {
       body: "Ada cerita baru yang diunggah!",
@@ -142,33 +134,47 @@ self.addEventListener("push", (event) => {
     },
   };
 
-  try {
-    const payload = event.data.json();
-    notificationData.title = payload.title || "StoryShare";
-    notificationData.options.body = payload.body || "Ada cerita baru!";
-    notificationData.options.icon = payload.icon || "favicon.png";
-    notificationData.options.data.url =
-      payload.data?.url || payload.url || "#/";
-  } catch (e) {
-    console.warn(
-      "Push event payload is not JSON, using default.",
-      event.data.text()
-    );
+  // parsing payload dengan aman
+  let payload = null;
+  if (event.data) {
+    try {
+      payload = event.data.json();
+    } catch (errJson) {
+      // jika bukan JSON, coba ambil textnya
+      try {
+        const text = event.data.text ? event.data.text() : null;
+        payload = text ? { body: text } : null;
+      } catch (errText) {
+        payload = null;
+      }
+      console.warn(
+        "Push event payload is not JSON, using fallback/text or default."
+      );
+    }
   }
 
-  event.waitUntil(
-    self.registration.showNotification(
-      notificationData.title,
-      notificationData.options
-    )
-  );
+  const title = payload?.title ?? defaultNotification.title;
+  const options = {
+    ...defaultNotification.options,
+    body: payload?.body ?? defaultNotification.options.body,
+    icon: payload?.icon ?? defaultNotification.options.icon,
+    badge: payload?.badge ?? defaultNotification.options.badge,
+    data: {
+      url:
+        payload?.data?.url ??
+        payload?.url ??
+        defaultNotification.options.data.url,
+    },
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener("notificationclick", (event) => {
   console.log("👆 Service Worker: Notification clicked");
 
   const notification = event.notification;
-  const urlToOpen = notification.data.url || "#/";
+  const urlToOpen = notification?.data?.url || "#/";
   notification.close();
 
   event.waitUntil(
@@ -176,10 +182,10 @@ self.addEventListener("notificationclick", (event) => {
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((clientsArr) => {
         const targetUrl = new URL(urlToOpen, self.location.origin).href;
-
-        const existingClient = clientsArr.find(
-          (client) => client.url === targetUrl
-        );
+        const existingClient = clientsArr.find((client) => {
+          // lebih toleran: cocokkan prefix atau exact match
+          return client.url === targetUrl || client.url.startsWith(targetUrl);
+        });
 
         if (existingClient) {
           return existingClient.focus();
@@ -190,15 +196,13 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-// --- 10. LISTEN UNTUK PESAN DARI CLIENT (BARU) ---
 self.addEventListener("message", async (event) => {
   if (event.data && event.data.type === "DELETE_OUTBOX_STORY") {
     console.log(
       "🗑️ Service Worker: Menerima perintah hapus outbox story:",
       event.data.storyId
     );
-    // Logika hapus dari IndexedDB bisa dilakukan di sini jika perlu
-    // Tapi lebih baik dilakukan di client (main thread)
+    // Sebaiknya hapus di thread utama (client), tapi jika perlu bisa dilakukan di sini
   }
 });
 

@@ -13,6 +13,7 @@ class StoryDetailPresenter {
     this.view.showLoading();
     try {
       const result = await this.storyModel.getStoryDetail(id);
+      this.view.hideLoading();
 
       if (result.success) {
         this.view.displayStory(result.data);
@@ -20,6 +21,7 @@ class StoryDetailPresenter {
         this.view.showError(result.message);
       }
     } catch (error) {
+      this.view.hideLoading();
       this.view.showError(error.message);
     }
   }
