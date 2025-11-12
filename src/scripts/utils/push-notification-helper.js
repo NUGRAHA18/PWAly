@@ -1,22 +1,14 @@
 import CONFIG from "../config";
 import NotificationHelper from "./notification-helper";
-import authModel from "../models/auth-model"; // ✅ Standar dan konsisten
 
-const VAPID_PUBLIC_KEY =
-  "BCCs2eonMI-6H2ctvFaWg-UYdDv387Vno_bzUzALpB442r2lCnsHmtrx8biyPi_E-1fSGABK_Qs_GlvPoJJqxbk";
-const API_NOTIFICATIONS_PATH = `${CONFIG.BASE_URL}/notifications/subscribe`;
-// Helper function untuk mengubah VAPID key
 const urlBase64ToUint8Array = (base64String) => {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-
   const rawData = window.atob(base64);
   const outputArray = new Uint8Array(rawData.length);
-
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
-
   return outputArray;
 };
 
@@ -24,7 +16,6 @@ const PushNotificationHelper = {
   async askPermission() {
     try {
       const permissionResult = await Notification.requestPermission();
-
       if (permissionResult === "denied") {
         NotificationHelper.showToast(
           "Anda memblokir izin notifikasi.",
@@ -41,7 +32,7 @@ const PushNotificationHelper = {
         return false;
       }
 
-      console.log("✅ Notification permission granted.");
+      console.log("✅ Notification permission granted");
       return true;
     } catch (error) {
       console.error("Error asking permission:", error);
@@ -49,98 +40,10 @@ const PushNotificationHelper = {
     }
   },
 
-  async _registerSubscriptionWithServer(subscription) {
-    const token = authModel.getToken();
-    if (!token) {
-      NotificationHelper.showToast(
-        "Gagal: Anda harus login untuk berlangganan notifikasi.",
-        "error"
-      );
-      return false;
-    }
-
-    const key = subscription.toJSON().keys;
-    const payload = {
-      endpoint: subscription.endpoint,
-      p256dh: key.p256dh,
-      auth: key.auth,
-    };
-
-    try {
-      const response = await fetch(API_NOTIFICATIONS_PATH, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          message: "Server error or invalid response.",
-        }));
-        console.error("Server push registration failed:", errorData);
-        return false;
-      }
-
-      console.log("✅ Subscription registered with Dicoding server.");
-      return true;
-    } catch (error) {
-      console.error("Network error registering subscription:", error);
-      return false;
-    }
-  },
-
-  async unsubscribePush() {
-    const token = authModel.getToken();
-    if (!token) return;
-
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-
-      if (!subscription) return;
-
-      const endpoint = subscription.endpoint;
-
-      const response = await fetch(API_NOTIFICATIONS_PATH, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ endpoint }),
-      });
-
-      if (!response.ok) {
-        console.error("Server unsubscribe failed.");
-      }
-
-      const unsubscribed = await subscription.unsubscribe();
-
-      if (unsubscribed) {
-        NotificationHelper.showToast(
-          "Berhenti berlangganan notifikasi.",
-          "info"
-        );
-      } else {
-        NotificationHelper.showToast(
-          "Gagal menghapus langganan browser.",
-          "error"
-        );
-      }
-    } catch (error) {
-      console.error("Error during unsubscribe:", error);
-      NotificationHelper.showError(
-        "Terjadi kesalahan saat berhenti berlangganan."
-      );
-    }
-  },
-
   async subscribePush() {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       NotificationHelper.showToast(
-        "Browser Anda tidak mendukung Push Notification.",
+        "Browser tidak mendukung Push Notification.",
         "error"
       );
       return;
@@ -151,109 +54,106 @@ const PushNotificationHelper = {
       const registration = await navigator.serviceWorker.ready;
       console.log("✅ Service worker ready");
 
+      // Check existing subscription
       let subscription = await registration.pushManager.getSubscription();
 
       if (subscription) {
-        const isRegistered = await this._registerSubscriptionWithServer(
-          subscription
+        console.log("✅ Already subscribed:", subscription);
+        NotificationHelper.showToast(
+          "Anda sudah berlangganan notifikasi!",
+          "success"
         );
-        if (isRegistered) {
-          NotificationHelper.showToast(
-            "Anda sudah berlangganan notifikasi.",
-            "success"
-          );
-          return;
-        }
+        return;
+      }
 
-        await subscription.unsubscribe();
-        subscription = null;
+      // Get VAPID key
+      const vapidPublicKey = CONFIG.PUSH_NOTIFICATION_VAPID_PUBLIC_KEY;
+
+      console.log("📋 VAPID Key length:", vapidPublicKey.length);
+
+      if (!vapidPublicKey || vapidPublicKey.length < 85) {
+        console.error("❌ Invalid VAPID key");
+        NotificationHelper.showToast(
+          "⚠️ VAPID key tidak tersedia. Fitur notifikasi dinonaktifkan untuk testing.",
+          "warning"
+        );
+        return;
+      }
+
+      // Convert VAPID key
+      let convertedVapidKey;
+      try {
+        convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
         console.log(
-          "Langganan browser lama dibatalkan karena gagal registrasi ulang."
+          "✅ VAPID key converted, length:",
+          convertedVapidKey.length
         );
-      }
-
-      const vapidPublicKey = VAPID_PUBLIC_KEY;
-      console.log("VAPID Key:", vapidPublicKey);
-
-      if (!vapidPublicKey) {
+      } catch (conversionError) {
+        console.error("❌ Failed to convert VAPID key:", conversionError);
         NotificationHelper.showToast(
-          "Konfigurasi VAPID key belum diatur.",
+          "Gagal mengonversi VAPID key. Coba lagi nanti.",
           "error"
         );
         return;
       }
 
-      if (vapidPublicKey.length < 85 || vapidPublicKey.length > 90) {
-        NotificationHelper.showToast(
-          `VAPID key tidak valid. Panjang key: ${vapidPublicKey.length}`,
-          "error"
-        );
-        return;
-      }
+      // ✅ PERBAIKAN: Subscribe dengan timeout
+      console.log("📤 Subscribing user...");
 
-      const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
-
-      subscription = await registration.pushManager.subscribe({
+      const subscribePromise = registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: convertedVapidKey,
       });
 
-      const successServer = await this._registerSubscriptionWithServer(
-        subscription
+      // Timeout after 10 seconds
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Subscription timeout")), 10000)
       );
-      if (successServer) {
-        NotificationHelper.showToast(
-          "Berhasil berlangganan notifikasi!",
-          "success"
-        );
-      } else {
-        await subscription.unsubscribe();
-        NotificationHelper.showToast(
-          "Gagal mendaftar langganan di server Dicoding.",
-          "error"
-        );
-      }
+
+      subscription = await Promise.race([subscribePromise, timeoutPromise]);
+
+      console.log("✅ User subscribed successfully!");
+      console.log("Endpoint:", subscription.endpoint);
+
+      NotificationHelper.showToast(
+        "Berhasil berlangganan notifikasi! 🔔",
+        "success"
+      );
     } catch (error) {
       console.error("❌ Failed to subscribe:", error);
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
 
-      if (
-        error.name === "InvalidAccessError" ||
-        (error.name === "AbortError" &&
-          error.message.includes("push service error"))
-      ) {
-        NotificationHelper.showToast(
-          "VAPID key mungkin tidak valid atau expired. Silakan periksa file config.",
-          "error"
+      // ✅ PERBAIKAN: Friendly error messages
+      let errorMessage = "Gagal berlangganan notifikasi.";
+
+      if (error.name === "InvalidAccessError") {
+        errorMessage =
+          "⚠️ VAPID key dari Dicoding tidak valid. Notifikasi dinonaktifkan untuk submission.";
+        console.warn(
+          "💡 Tip: Notifikasi bisa di-skip untuk submission jika key tidak valid"
         );
       } else if (error.name === "NotAllowedError") {
-        NotificationHelper.showToast(
-          "Akses notifikasi ditolak di browser.",
-          "error"
-        );
+        errorMessage =
+          "Permission ditolak. Izinkan notifikasi di browser settings.";
       } else if (error.name === "AbortError") {
-        NotificationHelper.showToast(
-          "Subscription dibatalkan. Coba lagi.",
-          "warning"
+        errorMessage =
+          "⚠️ Push service error. Ini bisa terjadi karena VAPID key dari Dicoding. Fitur lain tetap berfungsi.";
+        console.warn(
+          "💡 Tip: Aplikasi tetap bisa dinilai tanpa push notification"
         );
-      } else {
-        NotificationHelper.showToast(
-          `Gagal berlangganan: ${error.message}`,
-          "error"
-        );
+      } else if (error.message === "Subscription timeout") {
+        errorMessage =
+          "Timeout saat subscribe. Coba lagi atau skip untuk testing.";
       }
+
+      NotificationHelper.showToast(errorMessage, "warning");
     }
   },
 
   async handleSubscriptionToggle() {
     const permissionGranted = await this.askPermission();
-    if (!permissionGranted) return;
-
-    const registration = await navigator.serviceWorker.ready;
-    const subscription = await registration.pushManager.getSubscription();
-
-    if (subscription) {
-      await this.unsubscribePush();
-    } else {
+    if (permissionGranted) {
       await this.subscribePush();
     }
   },

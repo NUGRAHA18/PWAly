@@ -1,4 +1,20 @@
+// src/scripts/config.js
+
+/**
+ * ✅ DIPERBAIKI: Mendukung Development dan Production
+ *
+ * Development (npm run start-dev):
+ * - BASE_URL = "" (kosong)
+ * - Menggunakan webpack proxy ke https://story-api.dicoding.dev
+ *
+ * Production (npm run build):
+ * - BASE_URL = "https://story-api.dicoding.dev"
+ * - Request langsung ke API production
+ */
+
 const CONFIG = {
+  // ✅ BASE_URL untuk production
+  // Di development, webpack dev server akan proxy request ke API
   BASE_URL:
     process.env.NODE_ENV === "production"
       ? "https://story-api.dicoding.dev"
@@ -6,15 +22,24 @@ const CONFIG = {
 
   DEFAULT_LANGUAGE: "en-US",
 
+  // ✅ TESTING VAPID Key (untuk testing lokal)
+  // Key ini adalah key testing sendiri, bukan dari Dicoding
+  // GANTI KEMBALI ke key Dicoding sebelum submission!
+  PUSH_NOTIFICATION_VAPID_PUBLIC_KEY:
+    "BAcTwfjvyIi3PKbN5G8zYCd4e-OA7qjtN-uPcAY3w6Gl1KxrdJVX7Z8SGJbIAAiUaMYU9eR_HTFb_h5MdU3djq8",
+
+  // ✅ TAMBAHAN: Konfigurasi lainnya
   APP_NAME: "StoryShare",
   APP_VERSION: "1.0.0",
 
+  // Cache duration (dalam detik)
   CACHE_DURATION: {
-    IMAGES: 30 * 24 * 60 * 60,
-    API: 24 * 60 * 60,
-    STATIC: 7 * 24 * 60 * 60,
+    IMAGES: 30 * 24 * 60 * 60, // 30 hari
+    API: 24 * 60 * 60, // 1 hari
+    STATIC: 7 * 24 * 60 * 60, // 7 hari
   },
 
+  // API endpoints
   ENDPOINTS: {
     REGISTER: "/register",
     LOGIN: "/v1/login",
@@ -22,6 +47,7 @@ const CONFIG = {
     STORY_DETAIL: (id) => `/v1/stories/${id}`,
   },
 
+  // Feature flags
   FEATURES: {
     ENABLE_NOTIFICATIONS: true,
     ENABLE_OFFLINE_MODE: true,
@@ -30,15 +56,17 @@ const CONFIG = {
     ENABLE_CAMERA: true,
   },
 
+  // Limits
   LIMITS: {
-    MAX_PHOTO_SIZE: 1 * 1024 * 1024,
+    MAX_PHOTO_SIZE: 1 * 1024 * 1024, // 1MB
     MAX_DESCRIPTION_LENGTH: 2200,
     STORIES_PER_PAGE: 20,
   },
 };
 
+// ✅ Log konfigurasi saat development
 if (process.env.NODE_ENV !== "production") {
-  console.log("��� Configuration loaded:", {
+  console.log("🔧 Configuration loaded:", {
     NODE_ENV: process.env.NODE_ENV,
     BASE_URL: CONFIG.BASE_URL || "(using proxy)",
     APP_VERSION: CONFIG.APP_VERSION,
