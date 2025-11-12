@@ -4,7 +4,6 @@ class StoryCard {
   static render(story) {
     const hasLocation = story.lat && story.lon;
 
-    // --- PERUBAHAN DI SINI: dari <article> menjadi <a> ---
     return `
       <article
         class="story-card"
@@ -56,7 +55,6 @@ class StoryCard {
         </div>
       </article>
     `;
-    // --- AKHIR PERUBAHAN ---
   }
 }
 

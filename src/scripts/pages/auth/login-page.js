@@ -155,20 +155,11 @@ export default class LoginPage {
   }
 
   showLoading() {
-    const button = document.getElementById("login-button");
-    const text = document.getElementById("button-text");
-    const spinner = document.getElementById("button-spinner");
-
-    if (button) button.disabled = true;
-    if (text) text.style.display = "none";
-    if (spinner) spinner.style.display = "inline-block";
-
-    NotificationHelper.showLoading(); // <-- Sekarang fungsi ini sudah tersedia
+    NotificationHelper.showLoading();
   }
 
   hideLoading() {
-    // GANTI BAGIAN SPINNER TOMBOL DENGAN INI:
-    NotificationHelper.hideLoading(); // <-- Sekarang fungsi ini sudah tersedia
+    NotificationHelper.hideLoading();
   }
 
   showSuccess(message) {

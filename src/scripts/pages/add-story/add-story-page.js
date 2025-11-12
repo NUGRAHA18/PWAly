@@ -17,7 +17,6 @@ export default class AddStoryPage {
 
   async render() {
     if (!authGuard.requireAuth()) return "";
-
     return `
       <section class="add-story-container container">
         <div class="add-story-header">
@@ -114,7 +113,7 @@ export default class AddStoryPage {
   }
 
   async afterRender() {
-    if (!authGuard.requireAuth()) return;
+    if (!authGuard.isAuthenticated()) return;
 
     this._mapHandler = new MapHandler("location-map");
     this._mapHandler.init();
@@ -137,11 +136,10 @@ export default class AddStoryPage {
       this._clearErrors();
 
       const description = descriptionInput.value.trim();
-      const photoFile = this._photoFile; // Ambil File object
+      const photoFile = this._photoFile;
       const lat = latInput.value;
       const lon = lonInput.value;
 
-      // Validasi di sisi View
       const photoError = !photoFile ? "Photo is required" : null;
       const descriptionError = validators.required(description, "Description");
 
@@ -156,18 +154,14 @@ export default class AddStoryPage {
       }
       if (!isValid) return;
 
-      // --- PERUBAHAN UTAMA DI SINI ---
-      // 1. Buat object data mentah (File object bisa disimpan di IndexedDB)
       const storyData = {
         description: description,
         photo: photoFile,
-        lat: lat || null, // Kirim null jika kosong
-        lon: lon || null, // Kirim null jika kosong
+        lat: lat || null,
+        lon: lon || null,
       };
 
-      // 2. Kirim object mentah ke presenter, BUKAN FormData
       await this.presenter.handleAddStory(storyData);
-      // --- BATAS PERUBAHAN ---
     });
   }
 
@@ -256,15 +250,10 @@ export default class AddStoryPage {
       } catch (error) {
         console.error("❌ Failed to start camera:", error);
 
-        // Tampilkan error message yang user-friendly
         cameraError.textContent = error.message;
         cameraError.style.display = "block";
 
-        // Kembali ke options view
         this._updatePhotoUIState("options");
-
-        // Optional: Tampilkan toast notification juga
-        // NotificationHelper.showToast(error.message, "error");
       }
     });
 

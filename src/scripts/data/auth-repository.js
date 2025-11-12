@@ -2,13 +2,12 @@ import CONFIG from "../config";
 
 class AuthRepository {
   constructor() {
-    this.baseUrl = CONFIG.BASE_URL; // Ini sekarang "" (kosong)
+    this.baseUrl = CONFIG.BASE_URL;
   }
 
   async register({ name, email, password }) {
     try {
-      // Path ini akan menjadi: /register
-      const response = await fetch(`${this.baseUrl}/register`, {
+      const response = await fetch(`${this.baseUrl}/v1/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -16,14 +15,11 @@ class AuthRepository {
         body: JSON.stringify({ name, email, password }),
       });
 
-      // Perbaikan Poin 4: Cek .ok sebelum parse JSON
       if (!response.ok) {
         try {
-          // Coba parse body error jika ada
           const errorData = await response.json();
           throw new Error(errorData.message || "Registration failed");
         } catch (e) {
-          // Jika body error bukan JSON (misal HTML error 500)
           throw new Error(e.message || "Registration failed");
         }
       }
@@ -44,7 +40,6 @@ class AuthRepository {
 
   async login({ email, password }) {
     try {
-      // Path ini akan menjadi: /login
       const response = await fetch(`${this.baseUrl}/v1/login`, {
         method: "POST",
         headers: {
@@ -53,7 +48,6 @@ class AuthRepository {
         body: JSON.stringify({ email, password }),
       });
 
-      // Perbaikan Poin 4: Cek .ok sebelum parse JSON
       if (!response.ok) {
         try {
           const errorData = await response.json();
@@ -78,7 +72,6 @@ class AuthRepository {
     }
   }
 
-  // Perbaikan Poin 3: Menggunakan sessionStorage
   saveToken(token) {
     sessionStorage.setItem("auth-token", token);
   }

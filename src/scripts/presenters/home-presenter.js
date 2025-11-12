@@ -12,12 +12,7 @@ class HomePresenter {
 
     this.view.hideLoading();
 
-    if (result.success) {
-      this.view.displayStories(result.data);
-      this.view.displayMap(result.data);
-    } else {
-      this.view.showError(result.message);
-    }
+    return result;
   }
 }
 

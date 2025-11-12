@@ -2,8 +2,8 @@ import StoryCardSkeleton from "./story-card-skeleton";
 
 class StoryListSkeleton {
   /**
-   * Render beberapa skeleton card.
-   * @param {number} count - Jumlah skeleton yang ingin ditampilkan.
+   *
+   * @param {number} count
    */
   static render(count = 6) {
     let skeletons = "";

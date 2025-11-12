@@ -1,11 +1,9 @@
-// src/scripts/data/story-repository.js
-
 import CONFIG from "../config";
 import authRepository from "./auth-repository";
 
 class StoryRepository {
   constructor() {
-    this.baseUrl = CONFIG.BASE_URL; // Ini "" (kosong) untuk development
+    this.baseUrl = CONFIG.BASE_URL;
   }
 
   async getStories({ page = 1, size = 20, location = 1 } = {}) {
@@ -20,7 +18,6 @@ class StoryRepository {
         },
       });
 
-      // Cek .ok dulu sebelum parse JSON
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || "Gagal mengambil data");
@@ -58,7 +55,6 @@ class StoryRepository {
         },
       });
 
-      // Cek .ok dulu
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || "Gagal mengambil detail");
@@ -84,26 +80,16 @@ class StoryRepository {
     }
   }
 
-  /**
-   * ✅ DIPERBAIKI: Kembalikan try-catch, tapi THROW error agar bisa ditangkap presenter
-   * Ini penting untuk Background Sync berfungsi dengan baik
-   */
   async addStory(formData) {
     try {
       const token = authRepository.getToken();
 
-      // Kirim request ke API
       const response = await fetch(`${this.baseUrl}/v1/stories`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          // ❌ JANGAN tambahkan Content-Type untuk FormData!
-          // Browser akan otomatis set dengan boundary yang benar
-        },
+        headers: {},
         body: formData,
       });
 
-      // Cek response status
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.message || "Gagal menambahkan cerita";
@@ -122,7 +108,6 @@ class StoryRepository {
         message: data.message || "Cerita berhasil ditambahkan",
       };
     } catch (error) {
-      // ✅ THROW error agar bisa ditangkap di presenter (untuk offline mode)
       console.error("Add story error:", error);
       throw error;
     }

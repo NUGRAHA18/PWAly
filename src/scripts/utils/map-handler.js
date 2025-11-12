@@ -22,7 +22,6 @@ class MapHandler {
       this.defaultZoom
     );
 
-    // Tile Layers
     const osmLayer = L.tileLayer(
       "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
       {
@@ -49,7 +48,6 @@ class MapHandler {
 
     osmLayer.addTo(this.map);
 
-    // Layer Control
     const baseMaps = {
       "Street Map": osmLayer,
       Satellite: satelliteLayer,

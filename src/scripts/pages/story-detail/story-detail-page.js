@@ -3,7 +3,7 @@ import { parseActivePathname } from "../../routes/url-parser";
 import LoadingSpinner from "../../components/loading-spinner";
 import { showFormattedDate } from "../../utils";
 import authGuard from "../../utils/auth-guard";
-import MapHandler from "../../utils/map-handler"; // <-- [1] IMPORT BARU
+import MapHandler from "../../utils/map-handler";
 import DatabaseHelper from "../../utils/database-helper";
 import NotificationHelper from "../../utils/notification-helper";
 
@@ -11,14 +11,13 @@ export default class StoryDetailPage {
   constructor() {
     this.presenter = new StoryDetailPresenter(this);
     this.container = null;
-    this._mapHandler = null; // <-- [2] PROPERTI BARU
+    this._mapHandler = null;
     this._storyData = null;
   }
 
   async render() {
     if (!authGuard.requireAuth()) return "";
 
-    // Tampilkan loading spinner saat data sedang diambil
     return `
       <section class="container" id="story-detail-container">
         ${LoadingSpinner.render()}
@@ -31,10 +30,8 @@ export default class StoryDetailPage {
 
     this.container = document.getElementById("story-detail-container");
 
-    // Ambil ID dari URL
     const { id } = parseActivePathname();
 
-    // Minta presenter untuk mengambil data
     if (id) {
       await this.presenter.loadStory(id);
     } else {
@@ -66,15 +63,10 @@ export default class StoryDetailPage {
     NotificationHelper.hideLoading();
   }
 
-  /**
-   * Me-render HTML untuk detail cerita dan peta
-   */
   displayStory(story) {
     if (!this.container) return;
     this._storyData = story;
     const hasLocation = story.lat && story.lon;
-
-    // [3.a] Bersihkan instance map lama sebelum render ulang
 
     if (this._mapHandler) {
       this._mapHandler.destroy();
@@ -196,7 +188,6 @@ export default class StoryDetailPage {
     });
   }
 
-  // [4] METODE UNTUK MEMBERSIHKAN MAP SAAT HALAMAN DIGANTI
   async destroy() {
     if (this._mapHandler) {
       this._mapHandler.destroy();

@@ -11,29 +11,33 @@ export default class FavoritePage {
   }
 
   async render() {
-    if (!authGuard.requireAuth()) return "";
-
     return `
       <section class="container" id="favorite-page-container"> 
-        <div id="stories-container">
-          ${StoryListSkeleton.render(6)}
+        <div class="about-header"> <h1>Cerita Favorit</h1>
+          <p>Cerita yang Anda simpan untuk dibaca kembali.</p>
+        </div>
+        
+        <div class="stories-controls"> <div class="search-sort-container">
+            <input 
+              type="search" 
+              id="search-favorite" 
+              class="form-input" 
+              placeholder="Cari di dalam favorit..."
+              aria-label="Cari cerita favorit"
+            >
+          </div>
         </div>
 
-        <!-- optional: input search -->
-        <div class="search-wrapper">
-          <input id="search-favorite" placeholder="Cari favorit..." />
+        <div id="stories-container">
+          ${StoryListSkeleton.render(3)}
         </div>
       </section>
     `;
   }
 
   async afterRender() {
-    if (!authGuard.requireAuth()) return;
-
-    // Ambil data dari IndexedDB
+    if (!authGuard.isAuthenticated()) return;
     await this._loadFavoriteStories();
-
-    // Kriteria 4 (Skilled): Tambahkan event listener untuk search (cek null)
     const searchInput = document.getElementById("search-favorite");
     if (searchInput) {
       searchInput.addEventListener("input", (event) => {
@@ -46,8 +50,10 @@ export default class FavoritePage {
     try {
       const stories = await DatabaseHelper.getAllFavoriteStories();
       this._stories = Array.isArray(stories) ? stories : [];
+      this._stories.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
       this._renderStories(this._stories);
-      this._setupFavoriteButtonListeners(); // Panggil listener setelah render
     } catch (err) {
       console.error("Gagal memuat cerita favorit:", err);
       NotificationHelper.showToast("Gagal memuat cerita favorit", "error");
@@ -64,7 +70,7 @@ export default class FavoritePage {
       return name.includes(lowerKeyword) || desc.includes(lowerKeyword);
     });
     this._renderStories(filteredStories);
-    this._setupFavoriteButtonListeners(); // Panggil listener setelah render (filter)
+    this._setupFavoriteButtonListeners();
   }
 
   _renderStories(stories) {
@@ -85,19 +91,15 @@ export default class FavoritePage {
         </div>
       `;
     }
+    this._setupFavoriteButtonListeners();
   }
 
-  /**
-   * Mengatur event listener untuk tombol favorit di Halaman Favorit.
-   * Ini HANYA untuk DELETE.
-   */
   async _setupFavoriteButtonListeners() {
     const container = document.getElementById("stories-container");
     if (!container) return;
 
     const buttons = container.querySelectorAll(".btn-favorite");
     buttons.forEach((button) => {
-      // Tandai semua sebagai sudah difavoritkan
       button.classList.add("favorited");
       button.setAttribute("aria-label", "Hapus cerita dari favorit");
 
@@ -112,11 +114,9 @@ export default class FavoritePage {
         }
 
         try {
-          // --- LOGIKA DELETE ---
           await DatabaseHelper.deleteFavoriteStory(storyId);
           NotificationHelper.showToast("Cerita dihapus dari favorit", "info");
 
-          // Muat ulang daftar cerita setelah dihapus (tunggu sampai selesai)
           await this._loadFavoriteStories();
         } catch (err) {
           console.error("Gagal menghapus favorit:", err);

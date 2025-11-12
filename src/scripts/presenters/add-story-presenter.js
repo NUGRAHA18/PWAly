@@ -1,7 +1,9 @@
-// src/scripts/presenters/add-story-presenter.js
+// src/scripts/presenters/add-story-presenter.js (KODE LENGKAP DIPERBARUI)
 
 import storyModel from "../models/story-model";
 import DatabaseHelper from "../utils/database-helper";
+import authRepository from "../data/auth-repository";
+import authModel from "../models/auth-model"; // <-- 1. IMPORT BARU
 
 class AddStoryPresenter {
   constructor(view) {
@@ -9,32 +11,24 @@ class AddStoryPresenter {
     this.storyModel = storyModel;
   }
 
-  /**
-   * ✅ DIPERBAIKI: Logika offline yang benar
-   * 1. Buat FormData DULU (dengan ID)
-   * 2. Coba kirim ke API
-   * 3. Jika OFFLINE (error network), simpan ke outbox + IndexedDB
-   */
   async handleAddStory(storyData) {
     this.view.showLoading();
 
-    // 1. Generate ID untuk IndexedDB (bukan untuk API)
+    // 1. Generate ID untuk IndexedDB
     const storyId = Date.now().toString();
     storyData.id = storyId;
 
-    // 2. ✅ Buat FormData TANPA id (API Dicoding tidak terima field id)
+    // 2. Buat FormData
     const formData = new FormData();
     formData.append("description", storyData.description);
     formData.append("photo", storyData.photo, storyData.photo.name);
-
-    // Tambahkan lokasi jika ada
     if (storyData.lat && storyData.lon) {
       formData.append("lat", storyData.lat);
       formData.append("lon", storyData.lon);
     }
 
     try {
-      // 3. ✅ Coba kirim ke API dulu (ONLINE PATH)
+      // 3. Coba kirim ke API dulu (ONLINE PATH)
       const result = await this.storyModel.addStory(formData);
 
       this.view.hideLoading();
@@ -45,30 +39,65 @@ class AddStoryPresenter {
           window.location.hash = "#/";
         }, 1500);
       } else {
+        // Ini seharusnya tidak terjadi jika repository melempar error
         this.view.showError(result.message || "Gagal menambahkan cerita.");
       }
     } catch (error) {
-      // 4. ✅ OFFLINE PATH - Error akan ditangkap di sini
+      // 4. ✅ [DIPERBARUI] BLOK CATCH YANG LEBIH CERDAS
       this.view.hideLoading();
 
-      console.warn("📡 Offline mode detected:", error.message);
+      // Cek apakah ini error jaringan (offline sungguhan)
+      const isOffline =
+        error instanceof TypeError && error.message === "Failed to fetch";
+      // Cek apakah ini error autentikasi
+      const isAuthError =
+        error.message.includes("authentication") ||
+        error.message.includes("Unauthorized") ||
+        error.message.includes("401");
 
-      // Simpan data mentah ke IndexedDB (pakai id untuk indexing)
-      try {
-        await DatabaseHelper.putOutboxStory(storyData);
+      if (isOffline) {
+        // --- INI LOGIKA OFFLINE YANG BENAR ---
+        console.warn("📡 Offline mode detected:", error.message);
 
-        this.view.showSuccess(
-          "Kamu sedang offline. Cerita akan otomatis diunggah saat online kembali! 📤"
-        );
+        const token = authRepository.getToken();
+        if (!token) {
+          console.error("❌ Tidak ada token, tidak bisa menyimpan ke outbox.");
+          this.view.showError(
+            "Anda harus login untuk menyimpan cerita offline."
+          );
+          return;
+        }
 
+        storyData.token = token; // Tambahkan token ke data outbox
+
+        try {
+          await DatabaseHelper.putOutboxStory(storyData);
+          this.view.showSuccess(
+            "Kamu sedang offline. Cerita akan otomatis diunggah saat online kembali! 📤"
+          );
+          setTimeout(() => {
+            window.location.hash = "#/";
+          }, 2000);
+        } catch (dbError) {
+          console.error("❌ Gagal menyimpan ke IndexedDB:", dbError);
+          this.view.showError(
+            "Gagal menyimpan cerita. Pastikan browser mendukung IndexedDB."
+          );
+        }
+      } else if (isAuthError) {
+        // --- INI LOGIKA ERROR AUTENTIKASI (401) ---
+        console.error("❌ Authentication error:", error.message);
+        this.view.showError("Sesi Anda telah habis. Silakan login kembali.");
+
+        // Hapus sisa token/user dan paksa ke halaman login
         setTimeout(() => {
-          window.location.hash = "#/";
+          authModel.logout(); // Panggil logout dari model
+          window.location.hash = "#/login";
         }, 2000);
-      } catch (dbError) {
-        console.error("❌ Gagal menyimpan ke IndexedDB:", dbError);
-        this.view.showError(
-          "Gagal menyimpan cerita. Pastikan browser mendukung IndexedDB."
-        );
+      } else {
+        // --- UNTUK ERROR LAINNYA (Misal: 500, 400) ---
+        console.error("❌ Gagal menambah cerita (Error Lain):", error.message);
+        this.view.showError(error.message || "Gagal menambahkan cerita.");
       }
     }
   }
